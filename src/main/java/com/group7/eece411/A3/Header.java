@@ -50,4 +50,15 @@ public class Header {
 		return actualMessage;
 	}
 	
+	public InetAddress getIP() {
+		return source;
+	}
+	
+	public int getPort() {
+		return port;
+	}
+	
+	public long getTimestamp() {
+		return timestamp;
+	}
 }
