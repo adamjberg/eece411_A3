@@ -56,10 +56,13 @@ public class UDPClient {
 		}
 	}
 	
-	public byte[] send(String host, String port, String msg) throws IllegalArgumentException, IOException {
-		byte[] uniqueId = generateUniqueID();
+	public Header send(String host, String port, String msg) throws IllegalArgumentException, IOException {
+		Header uniqueHeader = new Header(source, source_port);
+		
+		byte[] uniqueId = uniqueHeader.generateUniqueID();
 		this.send(host, port, msg, uniqueId);
-		return uniqueId;
+		
+		return uniqueHeader;
 	}
 	
 	public void send(String host, String port, String msg, byte[] uniqueId) throws IllegalArgumentException, IOException {
@@ -83,29 +86,6 @@ public class UDPClient {
 		
 		return Arrays.copyOfRange(buffer, 0, packet.getLength());                         
 	}
-	/*
-	public byte[] send_reply(InetAddress host, int port, String msg) throws IllegalArgumentException, IOException {
-		if(host == null || port <=0 || msg == null || msg.isEmpty()) {
-			throw new IllegalArgumentException();
-		}
-		generateUniqueID();
-		byte request[] = constructByteRequest(msg);
-		int count = 3;
-        while(count > 0) {			
-			try {
-				this.send(host, port, request);
-				byte[] receivePacket = this.receive();
-				if(this.hasUniqueId(receivePacket))
-					return Arrays.copyOfRange(receivePacket, 16, receivePacket.length - 16);;
-			} catch(SocketTimeoutException se) {
-				System.out.println("retrying...");
-				count--;
-				this.setTimeout(this.getTimeout()*2);
-			}
-		} 
-        this.closeSocket();
-        throw new IOException("Retried " + count + " times : Connection failed.");
-	}*/
 	
 	private byte[] constructByteRequest(byte[] uniqueId, String data) {
 		byte[] dataBytes;
@@ -125,8 +105,4 @@ public class UDPClient {
 	private byte[] generateUniqueID() {
 		return new Header(source, source_port).generateUniqueID();
 	}
-	
-	/*private boolean hasUniqueId(byte[] packet) {
-		return Arrays.equals(Arrays.copyOfRange(packet, 0, 16), this.uniqueId); 
-	}	*/
 }	

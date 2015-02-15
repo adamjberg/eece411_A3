@@ -21,11 +21,13 @@ public class Header {
 	}
 	
 	public byte[] generateUniqueID() {
+		timestamp = System.currentTimeMillis();
+		
 		ByteBuffer resultBuffer = ByteBuffer.allocate(16).order(java.nio.ByteOrder.LITTLE_ENDIAN)
 					.put(source.getAddress())
 					.putShort((short)this.port)
 					.put(new byte[2])
-					.putLong(System.currentTimeMillis());
+					.putLong(timestamp);
 		return resultBuffer.array();
 	}
 	
