@@ -123,12 +123,7 @@ public class UDPClient {
 	}
 	
 	private byte[] generateUniqueID() {
-		ByteBuffer resultBuffer = ByteBuffer.allocate(16).order(java.nio.ByteOrder.LITTLE_ENDIAN)
-					.put(source.getAddress())
-					.putShort((short)this.source_port)
-					.put(new byte[2])
-					.putLong(System.currentTimeMillis());
-		return resultBuffer.array();
+		return new Header(source, source_port).generateUniqueID();
 	}
 	
 	/*private boolean hasUniqueId(byte[] packet) {
