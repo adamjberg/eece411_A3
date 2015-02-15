@@ -9,30 +9,43 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Vector;
 
-/**
- * Hello world!
- *
- */
+import com.group7.eece411.A3.UDPClient;
+
 public class App {
-	private UDPClient client;
-	private Vector<Node> nodes;
-
-	public static void main(String[] args) throws IOException {
-		System.setProperty("java.net.preferIPv4Stack", "true");
-		new App();
-	}
-
-	public App() throws IOException {
-		getNodesFromFile();
+	private static Vector<Node> nodes;
+	private static Vector<Header> receivedUniqueHeaders = new Vector<Header>();
+	
+    public static void main( String[] args ) throws Exception {
+    	getNodesFromFile();
 		getPortsForThisNode();
-		this.client = getClient();
-	}
+		UDPClient client = getClient();
+		client.setTimeout(0);
+		
+		do {
+			// Receive bytes and init empty byte array for the actual message
+			byte[] receivedBytes = client.receive();
+			byte[] message;
+			
+			// Create new Header obj for this received message
+			Header header = new Header();
+			message = header.decodeAndGetMessage(receivedBytes);
+			
+			// Check if header already in our vector of previously received headers
+			if (receivedUniqueHeaders.contains(header)) {
+				// TODO: do something with the dupe request
+			} else {
+				receivedUniqueHeaders.add(header);
+				// TODO: do something with this new request
+			}
+			
+		} while(true);
+    }
 
-	/*
+    /*
 	 * Creates a client based on the specified port for this node Allows
 	 * multiple services to run on the same node w/ diff ports
 	 */
-	public UDPClient getClient() throws UnknownHostException {
+	public static UDPClient getClient() throws UnknownHostException {
 		Vector<Integer> myPorts = getPortsForThisNode();
 		int portIndex = 0;
 		boolean success = false;
@@ -48,7 +61,7 @@ public class App {
 		return null;
 	}
 
-	private Vector<Integer> getPortsForThisNode() throws NumberFormatException,
+	private static Vector<Integer> getPortsForThisNode() throws NumberFormatException,
 			UnknownHostException {
 		Vector<Integer> myPorts = new Vector<Integer>();
 		for (Node node : nodes) {
@@ -63,9 +76,9 @@ public class App {
 		return myPorts;
 	}
 
-	private void getNodesFromFile() throws IOException {
+	private static void getNodesFromFile() throws IOException {
 		nodes = new Vector<Node>();
-		InputStream in = getClass().getClassLoader().getResourceAsStream(
+		InputStream in = App.class.getClassLoader().getResourceAsStream(
 				"file/hosts.txt");
 		BufferedReader reader = new BufferedReader(new InputStreamReader(in));
 		String line = null;
