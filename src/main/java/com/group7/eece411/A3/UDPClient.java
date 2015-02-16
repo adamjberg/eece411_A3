@@ -19,11 +19,13 @@ public class UDPClient {
 	private int source_port;
 	private int timeout;
 	private DatagramSocket socket;
+	private Protocol res_protocol;
 	
-	public UDPClient(int port) throws UnknownHostException {
+	public UDPClient(int port, Protocol res_protocol) throws UnknownHostException {
 		this.source = InetAddress.getByName(InetAddress.getLocalHost().getHostAddress());
 		this.source_port = port;
 		this.setTimeout(100);
+		this.res_protocol = res_protocol;
 	}	
 
 	public void setTimeout(int millseconds) {
@@ -77,14 +79,14 @@ public class UDPClient {
 		socket.send(packet);	
 	}
 	 
-	public byte[] receive() throws SocketException, IOException { 
+	public Protocol receive() throws SocketException, IOException, NotFoundCmdException { 
         this.createSocket();
         byte buffer[] = new byte[16384];        
         DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 		socket.setSoTimeout(this.timeout);
         socket.receive(packet); 
-		
-		return Arrays.copyOfRange(buffer, 0, packet.getLength());                         
+		return 
+			this.res_protocol.convert(Arrays.copyOfRange(buffer, 0, packet.getLength()));                          
 	}
 	
 	private byte[] constructByteRequest(byte[] uniqueId, String data) {
