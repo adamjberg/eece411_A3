@@ -33,6 +33,9 @@ public class RequestData extends Protocol {
 		HMdata.put("val_len", Conversions.int2leb(v_l, 0));
 		HMdata.put("value", r_v);
 	}
+	
+	public RequestData() {
+	}
 
 	public String requestMaker() throws IllegalArgumentException {
 		StringBuilder sb = new StringBuilder();
@@ -96,7 +99,25 @@ public class RequestData extends Protocol {
 
 	@Override
 	public boolean isValidate() {
-		//Todo
+		byte [] comm_temp =HMdata.get("command"); 	
+		byte command_code =  comm_temp[0];
+		
+		byte [] key= HMdata.get("key"); 
+		byte [] val_len = HMdata.get("val_len");
+		int val_len_int = Conversions.leb2int(val_len, 0);		
+		byte [] val = HMdata.get("value");
+		
+		//check the validity of the  data 
+		if (!checkCommandCode(command_code))
+		{
+			throw new IllegalArgumentException(); 
+		}
+		
+		//Check the length of val
+		if (val_len_int > VALUE_SIZE || val_len_int<0 || val.length >VALUE_SIZE )
+		{
+			throw new IllegalArgumentException(); 
+		}
 		
 		return false;
 	}
@@ -132,6 +153,11 @@ public class RequestData extends Protocol {
 		return rd;
 	}
 	
+	
+	/**
+	 * Given a command byte this function checks the validity of the command.
+	 * I have some hard coded stuff but dont laugh  
+	 * */
 	boolean checkCommandCode(byte comm)
 	{
 		if ( comm == 0x01 || comm == 0x02 || comm == 0x03 || comm == 0x04)

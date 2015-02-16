@@ -12,7 +12,6 @@ public class ResponseData extends Protocol {
 	public static final int KEY_SIZE = 32;
 	public static final int VALUE_SIZE = 15000;
 
-	@SuppressWarnings("unchecked")
 	public ResponseData(byte r_c, int v_l, byte[] r_v) {
 		byte[] rc = new byte[1];
 		rc[1] = r_c;
@@ -40,7 +39,6 @@ public class ResponseData extends Protocol {
 		return sb.toString();
 	}
 
-	@SuppressWarnings("unchecked")
 	public void ConstructGetSuccess(byte[] value) {
 		byte[] b = { 0x00 };
 		HMdata.put("response_code", b);
@@ -48,21 +46,18 @@ public class ResponseData extends Protocol {
 		HMdata.put("val_len", Conversions.int2leb(value.length, 0));
 	}
 
-	@SuppressWarnings("unchecked")
 	public void ConstructPutSuccess() {
 		byte[] b = { 0x00 };
 		HMdata.put("response_code", b);
 		HMdata.put("val_len", Conversions.int2leb(-1, 0));
 	}
 
-	@SuppressWarnings("unchecked")
 	public void ConstructNonExistanceKey() {
 		byte[] b = { 0x01 };
 		HMdata.put("response_code", b);
 		HMdata.put("val_len", Conversions.int2leb(-1, 0));
 	}
 
-	@SuppressWarnings("unchecked")
 	public void ConstructOutOfSpace() {
 		byte[] b = { 0x02 };
 		HMdata.put("response_code", b);
@@ -91,7 +86,6 @@ public class ResponseData extends Protocol {
 		return false;
 	}
 
-	@SuppressWarnings("static-access")
 	@Override
 	public Protocol convert(byte[] d)  {
 		if (d.length > MAX_RESPONSE_SIZE)
