@@ -16,6 +16,7 @@ public class App {
 	private static Vector<Header> receivedUniqueHeaders = new Vector<Header>();
 	
     public static void main( String[] args ) throws Exception {
+    	System.setProperty("java.net.preferIPv4Stack", "true");
     	getNodesFromFile();
 		getPortsForThisNode();
 		UDPClient client = getClient();

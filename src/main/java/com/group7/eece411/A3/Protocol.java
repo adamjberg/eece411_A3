@@ -1,9 +1,7 @@
 /**
  * 
  */
-package eece411_assg3_b;
-
-import java.util.Hashtable;
+package com.group7.eece411.A3;
 
 /**
  * @author Ehsan
@@ -11,13 +9,8 @@ import java.util.Hashtable;
  */
 public abstract class Protocol {
 	
-	Hashtable<String, byte[]> source = new Hashtable<String,byte[]>();
-	
-	
-	public abstract byte [] getHeader(); 
-	public abstract String strigyfy();
-	public abstract String Destrigyfy();
-
-	
+	public abstract boolean isValidate();
+	public abstract Protocol convert(byte[] d);
+	public abstract byte[] getHeader(String head);
 	
 }

@@ -1,4 +1,4 @@
-package eece411_assg3_b;
+package com.group7.eece411.A3;
 
 public class ResponseData {
 	public byte response_code;
