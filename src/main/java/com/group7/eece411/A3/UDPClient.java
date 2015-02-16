@@ -58,6 +58,10 @@ public class UDPClient {
 		}
 	}
 	
+	public Header send(String host, int port, String msg) throws IllegalArgumentException, IOException {
+		return this.send(host, String.valueOf(port), msg);
+	}
+	
 	public Header send(String host, String port, String msg) throws IllegalArgumentException, IOException {
 		Header uniqueHeader = new Header(source, source_port);
 		

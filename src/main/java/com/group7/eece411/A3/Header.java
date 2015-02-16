@@ -4,10 +4,14 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.Random;
 
 public class Header {
+	public static final int LENGTH_IN_BYTES = 16;
+	
 	private InetAddress source;
 	private int port;
+	private short randomNum;
 	private long timestamp;
 	
 	public Header(InetAddress s, int p) {
@@ -22,6 +26,8 @@ public class Header {
 	
 	public byte[] generateUniqueID() {
 		timestamp = System.currentTimeMillis();
+		Random r = new Random(timestamp);
+		randomNum = (short) r.nextInt();
 		
 		ByteBuffer resultBuffer = ByteBuffer.allocate(16).order(java.nio.ByteOrder.LITTLE_ENDIAN)
 					.put(source.getAddress())
@@ -41,6 +47,7 @@ public class Header {
 		
 		// Get Short (2 bytes) into port
 		port = msgBuffer.getShort();
+		randomNum = msgBuffer.getShort();
 		
 		// Get timestamp
 		timestamp = msgBuffer.getLong();
@@ -62,5 +69,18 @@ public class Header {
 	
 	public long getTimestamp() {
 		return timestamp;
+	}
+	
+	@Override
+	public boolean equals(Object other) {
+		boolean result = false;
+		if (other instanceof Header) {
+			Header that = (Header) other;
+			result = this.source == that.source
+					&& this.port == that.port
+					&& this.randomNum == that.randomNum
+					&& this.timestamp == that.timestamp;
+		}
+		return result;
 	}
 }
