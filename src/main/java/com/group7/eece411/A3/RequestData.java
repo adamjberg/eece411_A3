@@ -1,7 +1,7 @@
 /**
  * 
  */
-package eece411_assg3_b;
+package com.group7.eece411.A3;
 
 import java.util.Arrays;
 import java.util.HashMap;
