@@ -10,9 +10,7 @@ package com.group7.eece411.A3;
  */
 public abstract class Protocol {
 	
-	
-	public abstract boolean isValidate();
-	public abstract Protocol convert(byte[] d);
-	public abstract byte[] getHeader(String head);
+	public abstract Protocol fromBytes(byte[] d);
+	public abstract byte[] toBytes();
 	
 }

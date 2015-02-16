@@ -86,7 +86,7 @@ public class UDPClient {
 		socket.setSoTimeout(this.timeout);
         socket.receive(packet); 
 		return 
-			this.res_protocol.convert(Arrays.copyOfRange(buffer, 0, packet.getLength()));                          
+			this.res_protocol.fromBytes(Arrays.copyOfRange(buffer, 0, packet.getLength()));                          
 	}
 	
 	private byte[] constructByteRequest(byte[] uniqueId, String data) {
