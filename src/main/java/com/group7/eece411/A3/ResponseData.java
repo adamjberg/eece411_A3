@@ -49,7 +49,6 @@ public class ResponseData extends Protocol {
 
 	@Override
 	public byte[] toBytes() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 

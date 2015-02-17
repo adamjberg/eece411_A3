@@ -3,6 +3,8 @@ package com.group7.eece411.A3;
 import java.io.IOException;
 import java.net.SocketException;
 
+import com.group7.eece411.A3.RequestData.RequestCommand;
+
 public class App {
 	private UDPClient listener;
 	private Datastore db;
@@ -12,7 +14,6 @@ public class App {
 
 		App app = new App();
 		app.run();
-
 	}
 
 	public App() throws IOException {
@@ -24,21 +25,9 @@ public class App {
 		this.listener.createSocket();
 	}
 
-	public void run() throws SocketException, IOException {
+	public void run() throws SocketException, IOException, NotFoundCmdException {
 		do {
-			try {
-				RequestData receivedData = (RequestData) this.listener
-						.receive();
-
-				if (receivedData != null) {
-					System.out.println(receivedData.key);
-
-				} else {
-					System.out.println("NULL");
-				}
-			} catch (NotFoundCmdException ex) {
-
-			}
+			RequestData receivedData = (RequestData) this.listener.receive();
 		} while (true);
 	}
 }
