@@ -1,10 +1,7 @@
 package com.group7.eece411.A3;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 public class Agent implements Runnable{
 	
@@ -20,7 +17,6 @@ public class Agent implements Runnable{
 	public Agent(byte[] key) throws IOException {
 		this.key = key;
 		target = getResponsibleNode(key);
-		System.out.println(target.getHost());
 	}
 	
 	/*
@@ -30,7 +26,6 @@ public class Agent implements Runnable{
 		List<Integer> allLocations = Datastore.getInstance().findAllLocations();
 		Integer closestLocation = null;
 		for(Integer loc : allLocations) {
-			System.out.println(loc);
 			if(loc < key[0] && loc > closestLocation) {
 				closestLocation = loc;
 			}
