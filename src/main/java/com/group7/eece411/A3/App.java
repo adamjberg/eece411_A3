@@ -35,7 +35,8 @@ public class App {
     	setupRespondActions();
     	Protocol res = new RequestData();
     	this.listener = new UDPClient(this.db.findThisNode().getPort(), res);
-		this.listener.setTimeout(0); 
+    	this.listener.setTimeout(0);
+    	this.listener.createSocket();
     }
     
     private void setupRespondActions() {
@@ -45,7 +46,7 @@ public class App {
     	respondActions.put(CommandCode.GET, new CommandGet(this.db));
     }
     
-    public void run() {
+    public void run() throws SocketException, IOException {
     	do {
     		try {
     			this.listener.receive();
