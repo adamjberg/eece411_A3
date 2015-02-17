@@ -3,6 +3,8 @@
  */
 package eece411_assg3_b;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 
@@ -35,12 +37,13 @@ public class RequestData extends Protocol {
 	}
 	
 	public RequestData() {
+		//nothing to do
 	}
 
-	public String requestMaker() throws IllegalArgumentException {
+	public String requestMaker() throws NotFoundCmdException {
 		StringBuilder sb = new StringBuilder();
 		if (value.length > VALUE_SIZE || val_len > VALUE_SIZE) {
-			throw new IllegalArgumentException();
+			throw new NotFoundCmdException("Invalid value size.");
 		} else {
 			sb.append(Conversions.byteArrayToHexString(HMdata.get("command")));
 			sb.append(Conversions.byteArrayToHexString(HMdata.get("key")));
@@ -50,23 +53,13 @@ public class RequestData extends Protocol {
 		return sb.toString();
 	}
 
-	/*
-	 * 
-	 * */
-	public void put( byte [] k, byte [] val )
-	{
-		byte[] c_arr = { 0x01 };
-		HMdata.put("command", c_arr);
-		HMdata.put("key", k);
-		HMdata.put("val_len", Conversions.int2leb(val.length, 0));
-		HMdata.put("value", val);
-	}
 
-	/*
+	/**
 	 * Remember you are constructing the object you are not actually sending the put command. 
 	 * Val is a HEX String
+	 * @throws IOException 
 	 * */	
-	public void ConstructPut( String k, String val )
+	public byte [] ConstructPut( String k, String val ) throws IOException
 	{
 		byte [] val_arr = Conversions.hexStringToByteArray(val);
 		byte[] c_arr = { 0x01 };
@@ -74,31 +67,55 @@ public class RequestData extends Protocol {
 		HMdata.put("key", Conversions.hexStringToByteArray(k));
 		HMdata.put("val_len", Conversions.int2leb(val_arr.length, 0));
 		HMdata.put("value", val_arr);
+				
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		outputStream.write(HMdata.get("command"));
+		outputStream.write(HMdata.get("key"));
+		outputStream.write(HMdata.get("val_len"));
+		outputStream.write(HMdata.get("value"));
+
+		return outputStream.toByteArray();
 	}	
 	
 	
-	public void ConstructGet( byte [] key )
+	public byte [] ConstructGet( byte [] key ) throws IOException
 	{
 		byte[] c_arr = { 0x02 };
 		HMdata.put("command", c_arr);
 		HMdata.put("key", key);
-		HMdata.put("val_len", Conversions.int2leb(-1, 0));
+		HMdata.put("val_len", Conversions.int2leb(0, 0));
+		
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		outputStream.write(HMdata.get("command"));
+		outputStream.write(HMdata.get("key"));
+		outputStream.write(HMdata.get("val_len"));
+
+		return outputStream.toByteArray();
+	
 	}	
 	
 	
 	/*
 	 * Prolly need to change the argument to int type.  
 	 * */
-	public void ConstructRemove( byte [] k)
+	public byte [] ConstructRemove( byte [] k) throws IOException
 	{
 		byte[] c_arr = { 0x03 };
 		HMdata.put("command", c_arr);
 		HMdata.put("key", key);
-		HMdata.put("val_len", Conversions.int2leb(-1, 0));
+		HMdata.put("val_len", Conversions.int2leb(0, 0));
+		
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		outputStream.write(HMdata.get("command"));
+		outputStream.write(HMdata.get("key"));
+		outputStream.write(HMdata.get("val_len"));
+
+		return outputStream.toByteArray();
+	
 	}
 
 	@Override
-	public boolean isValidate() {
+	public boolean isValidate() throws NotFoundCmdException {
 		byte [] comm_temp =HMdata.get("command"); 	
 		byte command_code =  comm_temp[0];
 		
@@ -110,23 +127,23 @@ public class RequestData extends Protocol {
 		//check the validity of the  data 
 		if (!checkCommandCode(command_code))
 		{
-			throw new IllegalArgumentException(); 
+			throw new NotFoundCmdException("Invalid Command code.");
 		}
 		
 		//Check the length of val
 		if (val_len_int > VALUE_SIZE || val_len_int<0 || val.length >VALUE_SIZE )
 		{
-			throw new IllegalArgumentException(); 
+			throw new NotFoundCmdException("Invalid value length."); 
 		}
 		
-		return false;
+		return true;
 	}
 
 	@Override
-	public Protocol convert(byte[] d) {
+	public Protocol convert(byte[] d) throws NotFoundCmdException {
 		if (d.length > MAX_REQUEST_SIZE)
 		{
-			throw new IllegalArgumentException();
+			throw new NotFoundCmdException("Maximum request size is reached.");
 		}
 		//Create a new instance to better preserve data.
 		ResponseData rd  = new ResponseData();
@@ -142,13 +159,13 @@ public class RequestData extends Protocol {
 		//check the validity of the retrieved data 
 		if (!checkCommandCode(command_code))
 		{
-			throw new IllegalArgumentException(); 
+			throw new NotFoundCmdException("Invalid Command code."); 
 		}
 		
 		//Check the length of val
 		if (val_len_int > VALUE_SIZE || val_len_int<0 || val.length >VALUE_SIZE )
 		{
-			throw new IllegalArgumentException(); 
+			throw new NotFoundCmdException("Invalid value size."); 
 		}
 		return rd;
 	}
@@ -158,7 +175,7 @@ public class RequestData extends Protocol {
 	 * Given a command byte this function checks the validity of the command.
 	 * I have some hard coded stuff but dont laugh  
 	 * */
-	boolean checkCommandCode(byte comm)
+	private boolean checkCommandCode(byte comm)
 	{
 		if ( comm == 0x01 || comm == 0x02 || comm == 0x03 || comm == 0x04)
 		{

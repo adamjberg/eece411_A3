@@ -3,7 +3,6 @@
  */
 package eece411_assg3_b;
 
-import java.util.HashMap;
 
 /**
  * @author Ehsan
@@ -12,8 +11,8 @@ import java.util.HashMap;
 public abstract class Protocol {
 	
 	
-	public abstract boolean isValidate();
-	public abstract Protocol convert(byte[] d);
-	public abstract byte[] getHeader(String head);
+	public abstract boolean isValidate() throws NotFoundCmdException;
+	public abstract Protocol convert(byte[] d) throws NotFoundCmdException ;
+	public abstract byte[] getHeader(String head) ;
 	
 }

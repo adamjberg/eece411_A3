@@ -38,30 +38,59 @@ public class ResponseData extends Protocol {
 		}
 		return sb.toString();
 	}
-
-	public void ConstructGetSuccess(byte[] value) {
+	
+	public byte[] ConstructGetSuccess(byte[] value) throws IOException {
+		
+		
 		byte[] b = { 0x00 };
 		HMdata.put("response_code", b);
 		HMdata.put("response_value", value);
 		HMdata.put("val_len", Conversions.int2leb(value.length, 0));
-	}
+		
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
-	public void ConstructPutSuccess() {
+		outputStream.write(HMdata.get("response_code"));
+		outputStream.write(HMdata.get("val_len"));
+		outputStream.write(HMdata.get("response_value"));
+
+		return outputStream.toByteArray();
+	}
+	
+	
+	public byte [] ConstructPutSuccess() throws IOException {
 		byte[] b = { 0x00 };
 		HMdata.put("response_code", b);
-		HMdata.put("val_len", Conversions.int2leb(-1, 0));
+		HMdata.put("val_len", Conversions.int2leb(0, 0));
+		
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		outputStream.write(HMdata.get("response_code"));
+		outputStream.write(HMdata.get("val_len"));
+
+		return outputStream.toByteArray();
 	}
 
-	public void ConstructNonExistanceKey() {
+	public byte [] ConstructNonExistanceKey() throws IOException {
 		byte[] b = { 0x01 };
 		HMdata.put("response_code", b);
-		HMdata.put("val_len", Conversions.int2leb(-1, 0));
+		HMdata.put("val_len", Conversions.int2leb(0, 0));
+		
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		outputStream.write(HMdata.get("response_code"));
+		outputStream.write(HMdata.get("val_len"));
+
+		return outputStream.toByteArray();
 	}
 
-	public void ConstructOutOfSpace() {
+	public byte [] ConstructOutOfSpace() throws IOException {
 		byte[] b = { 0x02 };
 		HMdata.put("response_code", b);
-		HMdata.put("val_len", Conversions.int2leb(-1, 0));
+		HMdata.put("val_len", Conversions.int2leb(0, 0));
+		
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		outputStream.write(HMdata.get("response_code"));
+		outputStream.write(HMdata.get("val_len"));
+
+		return outputStream.toByteArray();
 	}
 
 	@Override
@@ -81,9 +110,33 @@ public class ResponseData extends Protocol {
 	}
 
 	@Override
-	public boolean isValidate() {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean isValidate() throws NotFoundCmdException {
+		byte [] res_temp =HMdata.get("response_code"); 	
+		byte res_code =  res_temp[0];
+		
+		byte [] val_len = HMdata.get("val_len");
+		int val_len_int = Conversions.leb2int(val_len, 0);		
+		byte [] val = HMdata.get("response_value");
+		
+		//check the validity of the  data 
+		if (val.length > MAX_RESPONSE_SIZE)
+		{
+			throw new NotFoundCmdException("Response value is too large.");
+		}
+		
+		
+		if (!checkResponseCode(res_code))
+		{
+			throw new NotFoundCmdException("Invalid response code.");
+		}
+		
+		//Check the length of val
+		if (val_len_int > VALUE_SIZE || val_len_int<0 || val.length >VALUE_SIZE )
+		{
+			throw new NotFoundCmdException("Invalid response value length."); 
+		}
+		
+		return true;
 	}
 
 	@Override
