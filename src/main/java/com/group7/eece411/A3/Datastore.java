@@ -20,7 +20,7 @@ public class Datastore {
 
 	private static Datastore instance = null;
 	private ConcurrentHashMap<Integer, NodeInfo> successors;
-	private NodeInfo self;
+	private Integer self;
 
 	private Datastore() throws IOException {
 		this.successors = new ConcurrentHashMap<Integer, NodeInfo>();
@@ -50,7 +50,7 @@ public class Datastore {
 	}
 
 	public NodeInfo findThisNode() {
-		return this.self;
+		return this.successors.get(this.self);
 	}
 
 	private void setupNodes() throws IOException {
@@ -77,7 +77,7 @@ public class Datastore {
 				 * I would suggest we do not go that way.
 				 */
 				if (self == null && isNodeInfoMine(n)) {
-					this.self = n;
+					this.self = n.getLocation();
 				} 
 				if (n.getLocation() < CIRCLE_SIZE && n.getLocation() >= 0) {
 					this.successors.put(n.getLocation(), n);
@@ -86,7 +86,14 @@ public class Datastore {
 		}
 		//fillEmptyLocations();
 	}
-
+	
+	public boolean isThisNode(NodeInfo n) {	
+		if(this.self != null) {
+			return n.getLocation() == self;
+		}
+		return false;
+	}
+	
 	private boolean isNodeInfoMine(NodeInfo nodeInfo)
 			throws UnknownHostException {
 		boolean isMyHostname = InetAddress.getLocalHost().getHostName()

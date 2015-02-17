@@ -13,6 +13,15 @@ public class AgentRemove extends Agent {
 	public void run() {
 		// TODO Auto-generated method stub
 		System.out.println("Remove something from "+target.getHost());
+		System.out.println("key : "+this.decodeKey);
+		try {
+			if(db.isThisNode(target)) {
+				target.remove(this.decodeKey);
+			}
+		} catch(Exception e) {
+			System.out.println(e.getMessage());
+			//TODO : send 0x04.  Internal KVStore failure
+		}
 	}
 
 }

@@ -74,16 +74,22 @@ public class App {
 	private void testCase() throws NotFoundCmdException, IOException {
 		byte[] command = new byte[]{1};
 		byte[] key = new byte[32];
-		key[0] = 1;
-		key[1] = 1;
+		byte[] decodeKey =  (new String("A Key!")).getBytes();
+		if(decodeKey.length > 32) {
+			throw new NotFoundCmdException("key exceeds the length 32!");
+		}
+		System.arraycopy(decodeKey, 0, key, 0, decodeKey.length);
 		byte[] val_len = new byte[]{0, 1};
 		byte[] value = new byte[]{2};
 		RequestData rd = new RequestData(command, key, val_len, value);
 		createAgent(rd);
 		command = new byte[]{2};
 		key = new byte[32];
-		key[0] = 1;
-		key[1] = 1;
+		decodeKey = (new String("A Key!")).getBytes();
+		if(decodeKey.length > 32) {
+			throw new NotFoundCmdException("key exceeds the length 32!");
+		}
+		System.arraycopy(decodeKey, 0, key, 0, decodeKey.length);
 		val_len = new byte[]{0, 1};
 		value = new byte[]{2};
 		RequestData rd2 = new RequestData(command, key, val_len, value);
