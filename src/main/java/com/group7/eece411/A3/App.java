@@ -2,9 +2,6 @@ package com.group7.eece411.A3;
 
 import java.io.IOException;
 import java.net.SocketException;
-import java.util.Random;
-
-import com.group7.eece411.A3.RequestData.RequestCommand;
 
 public class App {
 	private UDPClient client;
