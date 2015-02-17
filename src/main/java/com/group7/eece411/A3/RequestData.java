@@ -6,6 +6,7 @@ package com.group7.eece411.A3;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.HashMap;
 
 /**
  * @author Ehsan
@@ -18,105 +19,102 @@ public class RequestData extends Protocol {
 	public static final int KEY_SIZE_IN_BYTES = 32;
 	public static final int VALUE_LENGTH_SIZE_IN_BYTES = 2;
 	public static final int MIN_MESSAGE_SIZE = KEY_SIZE_IN_BYTES
-			+ COMMAND_SIZE_IN_BYTES;
+			+ COMMAND_SIZE_IN_BYTES + VALUE_LENGTH_SIZE_IN_BYTES;
 	public static final int MAX_MESSAGE_SIZE = MAX_VALUE_LENGTH
 			+ MIN_MESSAGE_SIZE;
 
-	public enum RequestCommand {
-		INVALID(0x00), PUT(0x01), GET(0x02), REMOVE(0x03), SHUTDOWN(0x04);
-		private byte value;
-
-		RequestCommand(int code) {
-			this.value = (byte) code;
-		}
-	}
-
 	public Header header;
-	public RequestCommand requestCommand;
 	public String key;
 	public String value;
-
+	private HashMap <String, byte[]>  HMdata;
+	
 	public RequestData(byte requestCommand, String key, String value)
 			throws NotFoundCmdException {
-		this();
 		this.key = key;
 		this.value = value;
-		if (requestCommand < RequestCommand.values().length) {
-			this.requestCommand = RequestCommand.values()[requestCommand];
+		/*if (requestCommand < RequestCommand.values().length) {
+			requestCommand = Protocol.RequestCommand.values()[requestCommand];
 		} else {
 			throw new NotFoundCmdException("Command " + requestCommand
 					+ " not found");
-		}
-	}
-
-	public RequestData(RequestCommand requestCommand, String key) {
-		this(requestCommand, key, "");
-	}
-
-	public RequestData(RequestCommand requestCommand, String key, String value) {
-		this();
-		this.requestCommand = requestCommand;
-		this.key = key;
-		this.value = value;
+		}*/
 	}
 
 	public RequestData() {
-		this.requestCommand = RequestCommand.INVALID;
-		this.key = "";
-		this.value = "";
-		this.header = new Header();
+		HMdata = new HashMap<String, byte[]> ();
 	}
 
+	public RequestData(byte[] c, byte[] k, byte[] val_len, byte[] r_v) {
+		HMdata = new HashMap<String, byte[]> (); 
+		HMdata.put("command", c);
+		HMdata.put("key", k);
+		HMdata.put("value-length", val_len);
+		HMdata.put("value", r_v);
+	}
+	
 	@Override
 	public Protocol fromBytes(byte[] inBytes) throws UnknownHostException,
 			NotFoundCmdException {
 
-		byte[] headerBytes = Arrays.copyOfRange(inBytes, 0,
-				Header.LENGTH_IN_BYTES);
-		header.decode(headerBytes);
-
-		byte[] messageBytes = Arrays.copyOfRange(inBytes,
-				Header.LENGTH_IN_BYTES, inBytes.length);
-
-		if (messageBytes.length < MIN_MESSAGE_SIZE) {
-			return null;
+		if (inBytes.length > MAX_MESSAGE_SIZE || inBytes.length < MIN_MESSAGE_SIZE)
+		{
+			throw new NotFoundCmdException("Request size is incorrect.");
 		}
-		ByteBuffer byteBuffer = ByteBuffer.wrap(messageBytes).order(
-				java.nio.ByteOrder.LITTLE_ENDIAN);
+		
+		// Retrieve the data from the array
+		HMdata.put("command", new byte[] {inBytes[0]});// The first elemt is the Response code 
+		HMdata.put("key", Arrays.copyOfRange(inBytes, 1, KEY_SIZE_IN_BYTES+1)); // the [1:32) the elements are the length
+		HMdata.put("value-length", Arrays.copyOfRange(inBytes, 33, 33+VALUE_LENGTH_SIZE_IN_BYTES)); // the [33:34) the elements are the length
 
-		byte requestCommand = byteBuffer.get();
-		byte[] keyBuffer = new byte[KEY_SIZE_IN_BYTES];
-		byteBuffer.get(keyBuffer);
-		String key = StringUtils.byteArrayToHexString(keyBuffer);
-		String value = "";
-		if (byteBuffer.remaining() >= 2) {
-			int valueLength = byteBuffer.getShort();
-
-			if (valueLength > 0 && valueLength < MAX_VALUE_LENGTH
-					&& valueLength <= byteBuffer.remaining()) {
-				byte[] valueBuffer = new byte[valueLength];
-				byteBuffer.get(valueBuffer);
-				value = StringUtils.byteArrayToHexString(valueBuffer);
-			}
+		int val_len_int = ByteOrder.leb2int(HMdata.get("value-length"), 0, VALUE_LENGTH_SIZE_IN_BYTES);
+		System.out.println(val_len_int);
+		if(MIN_MESSAGE_SIZE + val_len_int > inBytes.length || val_len_int > MAX_VALUE_LENGTH) { //Check the length of val
+			throw new NotFoundCmdException("Invalid value size."); 
 		}
+		
+		HMdata.put("value", Arrays.copyOfRange(inBytes, MIN_MESSAGE_SIZE, MIN_MESSAGE_SIZE+val_len_int));
+		
+		//check the validity of the retrieved data 
+		if (!checkCommandCode(HMdata.get("command")))
+		{
+			throw new NotFoundCmdException("Invalid Command code."); 
+		}
+		return new RequestData(HMdata.get("command"), HMdata.get("key"), HMdata.get("value-length"), HMdata.get("value"));	
+	}
 
-		return new RequestData(requestCommand, key, value);
+	@Override	
+	public Integer getHeader(String Head) {
+		byte[] bytes = HMdata.get(Head);
+		if(bytes.length >= 4) {
+			return ByteOrder.leb2int(bytes, 0);
+		}
+		return ByteOrder.leb2int(bytes, 0, bytes.length);
+	}
+	
+	public byte[] getRawHeader(String Head) {
+		return HMdata.get(Head);
+	}
+	
+	/**
+	 * Given a command byte this function checks the validity of the command.
+	 * I have some hard coded stuff but dont laugh  
+	 * */
+	private boolean checkCommandCode(byte[] comm)
+	{
+		return ByteOrder.leb2int(comm, 0, 1) < App.RequestCommand.values().length;
 	}
 
 	@Override
 	public byte[] toBytes() {
 		ByteBuffer byteBuffer = ByteBuffer.allocate(getMessageSizeInBytes())
 				.order(java.nio.ByteOrder.LITTLE_ENDIAN);
-		byteBuffer.put(requestCommand.value);
-		byteBuffer.put(Arrays.copyOf(StringUtils.hexStringToByteArray(key),KEY_SIZE_IN_BYTES));
-		if (value.length() > 0) {
-			byteBuffer.putShort((short) value.length());
-			byteBuffer.put(value.getBytes());
-		}
-
+		byteBuffer.put(HMdata.get("command"));
+		byteBuffer.put(HMdata.get("key"));
+		byteBuffer.put(HMdata.get("value-length")); 
+		byteBuffer.put(HMdata.get("value")); //could cause problem if value length is 0, fix later	
 		return byteBuffer.array();
 	}
-
+	
 	private int getMessageSizeInBytes() {
 		if (value.length() > 0) {
 			return MIN_MESSAGE_SIZE + VALUE_LENGTH_SIZE_IN_BYTES

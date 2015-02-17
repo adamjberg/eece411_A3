@@ -26,9 +26,25 @@ public class App {
 
 	public void run() throws SocketException, IOException, NotFoundCmdException {
 		do {
-			RequestData receivedData = (RequestData) this.client.receive();
+			try{
+				Protocol p = this.client.receive();
+				int result = p.getHeader("command");
+				System.out.println(result);
+				//TODO : pass to command
+			} catch(NotFoundCmdException ex) {
+    			System.out.println(ex.toString());
+    			//TODO : send response 0x05: Unrecognized command
+    		} catch(Exception e) {
+    			System.out.println(e.getMessage());
+    			//TODO : send response 0x04: Internal KVStore failure
+    		}
 			
-			int location = keyToLocation(receivedData.key);
+			//Let command class handle all these complex logic 
+			//App class is only responsible for receiving and respond if exception get thrown
+			
+			/*
+			int location = keyToLocation(p.getRawHeader("key")); 
+			
 			NodeInfo destNodeInfo = this.db.find(location);
 						
 			if(destNodeInfo == thisNode)
@@ -38,7 +54,7 @@ public class App {
 			else
 			{
 				forwardRequestTo(receivedData, destNodeInfo);
-			}
+			}*/
 			
 		} while (true);
 	}
@@ -58,5 +74,14 @@ public class App {
 	private void forwardRequestTo(RequestData req, NodeInfo destNode) throws IllegalArgumentException, IOException
 	{
 		client.send(destNode.getHost(), destNode.getPort(), req);
+	}
+
+	public enum RequestCommand {
+		INVALID(0x00), PUT(0x01), GET(0x02), REMOVE(0x03), SHUTDOWN(0x04);
+		private byte value;
+
+		RequestCommand(int code) {
+			this.value = (byte) code;
+		}
 	}
 }

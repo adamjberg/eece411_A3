@@ -54,4 +54,16 @@ public class ResponseData extends Protocol {
 		return null;
 	}
 
+	@Override
+	public Integer getHeader(String Head) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public byte[] getRawHeader(String Head) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

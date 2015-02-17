@@ -58,11 +58,14 @@ public class Datastore {
 				 * multiple that match because we may want to run multiple
 				 * services on the same machine i.e. testing
 				 */
+				/*
+				 * Idea of testing with multiple threads can become very complex,
+				 * I would suggest we do not go that way.
+				 */
 				if (self == null && isNodeInfoMine(n)) {
 					this.self = n;
-				}
-				if (n.getLocation() < CIRCLE_SIZE && n.getLocation() >= 0) {
-					this.successors[n.getLocation()] = n;
+				} else if (n.getLocation() < CIRCLE_SIZE && n.getLocation() >= 0) {
+					this.successors[n.getLocation()] = n; //Out of Bound exception here; need to change to hashmap
 				}
 			}
 		}
@@ -84,6 +87,7 @@ public class Datastore {
 		try {
 			socket = new DatagramSocket(port);
 		} catch (IOException e) {
+			System.out.println(e.getMessage());
 			portFree = false;
 		} finally {
 			if (socket != null) {
