@@ -1,28 +1,28 @@
 package com.group7.eece411.A3;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 
 public class Agent implements Runnable{
 	
-	protected Datastore ds;
 	protected byte[] key;
 	protected byte[] value;
 	protected NodeInfo target;
 	
-	public Agent(Datastore ds, byte[] key, byte[] value) {
-		this.ds = ds;
-		this.key = key;
+	public Agent(byte[] key, byte[] value) throws IOException {
+		this(key);
 		this.value = value;
+	}
+	
+	public Agent(byte[] key) throws IOException {
+		this.key = key;
 		target = getCorrespondNode(key);
 	}
 	
-	public Agent(Datastore ds, byte[] key) {
-		this.ds = ds;
-		this.key = key;
-	}
-	
-	private NodeInfo getCorrespondNode(byte[] key) {
-		//ArrayList<NodeInfo> successors = (ArrayList<NodeInfo>) ds.findAll(); //Error here, need to debug
+	private NodeInfo getCorrespondNode(byte[] key) throws IOException {
+		Collection<NodeInfo> list = Datastore.getInstance().findAll();
+		ArrayList<NodeInfo> successors = new ArrayList<NodeInfo>(list);
 		//TODO : find the node that responsible for the key
 		return null;
 	}

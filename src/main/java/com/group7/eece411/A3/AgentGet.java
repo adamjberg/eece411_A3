@@ -1,11 +1,12 @@
 package com.group7.eece411.A3;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class AgentGet extends Agent {
 
-	public AgentGet(Datastore ds, byte[] key) {
-		super(ds, key);
+	public AgentGet(byte[] key) throws IOException {
+		super(key);
 	}
 
 	@Override

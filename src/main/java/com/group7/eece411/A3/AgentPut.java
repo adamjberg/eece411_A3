@@ -1,9 +1,11 @@
 package com.group7.eece411.A3;
 
+import java.io.IOException;
+
 public class AgentPut extends Agent {
 
-	public AgentPut(Datastore ds, byte[] key, byte[] value) {
-		super(ds, key, value);
+	public AgentPut(byte[] key, byte[] value) throws IOException {
+		super(key, value);
 	}
 
 	@Override

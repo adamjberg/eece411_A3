@@ -17,7 +17,7 @@ public class Datastore {
 	private ConcurrentHashMap<Integer, NodeInfo> successors;
 	private NodeInfo self;
 
-	protected Datastore() throws IOException {
+	private Datastore() throws IOException {
 		this.successors = new ConcurrentHashMap<Integer, NodeInfo>();
 		setupNodes();
 	}
@@ -71,8 +71,7 @@ public class Datastore {
 				}
 			}
 		}
-
-		fillEmptyLocations();
+		//fillEmptyLocations();
 	}
 
 	private boolean isNodeInfoMine(NodeInfo nodeInfo)

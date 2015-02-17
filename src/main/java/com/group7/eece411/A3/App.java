@@ -22,7 +22,7 @@ public class App {
 	}
 
 	public App() throws IOException {
-		this.db = new Datastore();
+		this.db = Datastore.getInstance();
 		Protocol res = new RequestData();
 		thisNode = this.db.findThisNode();
 		this.client = new UDPClient(thisNode.getPort(), res);
@@ -51,16 +51,16 @@ public class App {
 		} while (true);
 	}
 	
-	private void createAgent(Protocol p) throws NotFoundCmdException {
+	private void createAgent(Protocol p) throws NotFoundCmdException, IOException {
 		switch (p.getHeaderCode("command")) {
 			case 1: 
-				(new Thread(new AgentPut(db, p.getRawHeader("key"), p.getRawHeader("value")))).start();
+				(new Thread(new AgentPut(p.getRawHeader("key"), p.getRawHeader("value")))).start();
 				break;
 			case 2: 
-				(new Thread(new AgentGet(db, p.getRawHeader("key")))).start();
+				(new Thread(new AgentGet(p.getRawHeader("key")))).start();
 				break;
 			case 3: 
-				(new Thread(new AgentRemove(db, p.getRawHeader("key")))).start();
+				(new Thread(new AgentRemove(p.getRawHeader("key")))).start();
 				break;
 			case 4: 
 				break;
@@ -71,7 +71,7 @@ public class App {
 	/*
 	 * This is a test method 
 	 */
-	private void testCase() throws NotFoundCmdException {
+	private void testCase() throws NotFoundCmdException, IOException {
 		byte[] command = new byte[]{1};
 		byte[] key = new byte[32];
 		key[0] = 1;

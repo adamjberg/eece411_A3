@@ -1,9 +1,11 @@
 package com.group7.eece411.A3;
 
+import java.io.IOException;
+
 public class AgentRemove extends Agent {
 
-	public AgentRemove(Datastore ds, byte[] key) {
-		super(ds, key);
+	public AgentRemove(byte[] key) throws IOException {
+		super(key);
 		// TODO Auto-generated constructor stub
 	}
 
