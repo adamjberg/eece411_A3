@@ -12,7 +12,7 @@ public class AgentGet extends Agent {
 	@Override
 	public void run() {
 		
-		System.out.println("get a value");
+		System.out.println("get a value from "+target.getHost());
 		//TODO : get the value from NodeInfo target 
 	}
 	

@@ -12,7 +12,7 @@ public class AgentRemove extends Agent {
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
-		System.out.println("Remove something");
+		System.out.println("Remove something from "+target.getHost());
 	}
 
 }

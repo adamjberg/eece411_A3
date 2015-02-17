@@ -7,7 +7,12 @@ import java.io.InputStreamReader;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Datastore {
@@ -32,7 +37,14 @@ public class Datastore {
 	public NodeInfo find(int location) {
 		return this.successors.get(location);
 	}
-
+ 
+	/*
+	 * Return sorted list of locations
+	 */
+	public List<Integer> findAllLocations() {
+		return asSortedList(this.successors.keySet());
+	}
+	
 	public Collection<NodeInfo> findAll() {
 		return this.successors.values();
 	}
@@ -66,8 +78,9 @@ public class Datastore {
 				 */
 				if (self == null && isNodeInfoMine(n)) {
 					this.self = n;
-				} else if (n.getLocation() < CIRCLE_SIZE && n.getLocation() >= 0) {
-					this.successors.put(n.getLocation(), n); //Out of Bound exception if using array; need to change to hashmap
+				} 
+				if (n.getLocation() < CIRCLE_SIZE && n.getLocation() >= 0) {
+					this.successors.put(n.getLocation(), n);
 				}
 			}
 		}
@@ -132,4 +145,10 @@ public class Datastore {
 			}
 		}
 	}
+	
+	private List<Integer> asSortedList(Set<Integer> c) {
+		List<Integer> list = new ArrayList<Integer>(c);
+		Collections.sort(list);
+		return list;
+	}	
 }

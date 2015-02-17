@@ -11,7 +11,7 @@ public class AgentPut extends Agent {
 	@Override
 	public void run() {
 		// TODO put key value pair into NodeInfo target
-		System.out.println("Put some value");
+		System.out.println("Put some value to "+target.getHost());
 	}
 
 }
