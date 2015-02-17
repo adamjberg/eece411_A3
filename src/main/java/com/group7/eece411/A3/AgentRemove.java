@@ -17,6 +17,8 @@ public class AgentRemove extends Agent {
 		try {
 			if(db.isThisNode(target)) {
 				target.remove(this.decodeKey);
+			} else {
+				//TODO : send remote request
 			}
 		} catch(Exception e) {
 			System.out.println(e.getMessage());

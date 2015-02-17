@@ -21,7 +21,7 @@ public class Agent implements Runnable{
 	
 	public Agent(byte[] key) throws IOException {
 		this.key = key;
-		this.decodeKey = new String(key, "UTF-8");
+		this.decodeKey = StringUtils.byteArrayToHexString(key);
 		this.db = Datastore.getInstance();
 		target = getResponsibleNode(key);
 	}

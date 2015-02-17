@@ -3,6 +3,7 @@
  */
 package com.group7.eece411.A3;
 
+import java.io.UnsupportedEncodingException;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -28,16 +29,9 @@ public class RequestData extends Protocol {
 	public String value;
 	private HashMap <String, byte[]>  HMdata;
 	
-	public RequestData(byte requestCommand, String key, String value)
-			throws NotFoundCmdException {
-		this.key = key;
-		this.value = value;
-		/*if (requestCommand < RequestCommand.values().length) {
-			requestCommand = Protocol.RequestCommand.values()[requestCommand];
-		} else {
-			throw new NotFoundCmdException("Command " + requestCommand
-					+ " not found");
-		}*/
+	public RequestData(int cmd, String key, byte[] value)
+			throws NotFoundCmdException, UnsupportedEncodingException {
+		this(new byte[]{(byte)cmd},StringUtils.hexStringToByteArray(key), ByteOrder.int2leb(value.length), value);
 	}
 
 	public RequestData() {
@@ -100,7 +94,9 @@ public class RequestData extends Protocol {
 		byteBuffer.put(HMdata.get("command"));
 		byteBuffer.put(HMdata.get("key"));
 		byteBuffer.put(HMdata.get("value-length")); 
-		byteBuffer.put(HMdata.get("value")); //could cause problem if value length is 0, fix later	
+		if(HMdata.get("value") != null) {
+			byteBuffer.put(HMdata.get("value")); 
+		}
 		return byteBuffer.array();
 	}
 	

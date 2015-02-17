@@ -74,7 +74,7 @@ public class App {
 	private void testCase() throws NotFoundCmdException, IOException {
 		byte[] command = new byte[]{1};
 		byte[] key = new byte[32];
-		byte[] decodeKey =  (new String("A Key!")).getBytes();
+		byte[] decodeKey =  StringUtils.hexStringToByteArray("deadbeef");
 		if(decodeKey.length > 32) {
 			throw new NotFoundCmdException("key exceeds the length 32!");
 		}
@@ -85,7 +85,7 @@ public class App {
 		createAgent(rd);
 		command = new byte[]{2};
 		key = new byte[32];
-		decodeKey = (new String("A Key!")).getBytes();
+		decodeKey = StringUtils.hexStringToByteArray("deadbeef");
 		if(decodeKey.length > 32) {
 			throw new NotFoundCmdException("key exceeds the length 32!");
 		}

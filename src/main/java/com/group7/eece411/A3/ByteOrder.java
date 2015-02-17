@@ -114,7 +114,13 @@ public class ByteOrder {
         buf[offset+2]=(byte)((x>>16) & 0x000000FF);
         buf[offset+3]=(byte)((x>>24) & 0x000000FF);
     }
-
+    
+    public static byte[] int2leb(int x) {
+    	byte[] buf = new byte[2];
+        buf[0]=(byte)(x & 0x000000FF);
+        buf[1]=(byte)((x>>8) & 0x000000FF);
+        return buf;
+    }
     /**
      * Int to little-endian bytes: writes x to given stream
      */
