@@ -4,12 +4,11 @@ public class AgentPut extends Agent {
 
 	public AgentPut(Datastore ds, byte[] key, byte[] value) {
 		super(ds, key, value);
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override
 	public void run() {
-		// TODO Auto-generated method stub
+		// TODO put key value pair into NodeInfo target
 		System.out.println("Put some value");
 	}
 

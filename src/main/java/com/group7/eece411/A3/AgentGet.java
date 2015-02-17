@@ -12,17 +12,7 @@ public class AgentGet extends Agent {
 	public void run() {
 		
 		System.out.println("get a value");
-		ArrayList<NodeInfo> successors = (ArrayList<NodeInfo>) ds.findAll();
-		//TODO : find the node that responsible for the key
-	}
-	
-	/*
-	 * The simplest hash function, just take the first byte
-	 */
-	private int keyToLocation(String key)
-	{
-		byte[] bytes = StringUtils.hexStringToByteArray(key);
-		return bytes[0];
+		//TODO : get the value from NodeInfo target 
 	}
 	
 
