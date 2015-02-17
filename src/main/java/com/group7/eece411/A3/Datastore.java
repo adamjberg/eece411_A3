@@ -7,16 +7,18 @@ import java.io.InputStreamReader;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Collection;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Datastore {
 	public static int CIRCLE_SIZE = 256;
 
 	private static Datastore instance = null;
-	private NodeInfo[] successors;
+	private ConcurrentHashMap<Integer, NodeInfo> successors;
 	private NodeInfo self;
 
 	protected Datastore() throws IOException {
-		this.successors = new NodeInfo[CIRCLE_SIZE];
+		this.successors = new ConcurrentHashMap<Integer, NodeInfo>();
 		setupNodes();
 	}
 
@@ -28,11 +30,11 @@ public class Datastore {
 	}
 
 	public NodeInfo find(int location) {
-		return this.successors[location];
+		return this.successors.get(location);
 	}
 
-	public NodeInfo[] findAll() {
-		return this.successors;
+	public Collection<NodeInfo> findAll() {
+		return this.successors.values();
 	}
 
 	public NodeInfo findThisNode() {
@@ -65,7 +67,7 @@ public class Datastore {
 				if (self == null && isNodeInfoMine(n)) {
 					this.self = n;
 				} else if (n.getLocation() < CIRCLE_SIZE && n.getLocation() >= 0) {
-					this.successors[n.getLocation()] = n; //Out of Bound exception here; need to change to hashmap
+					this.successors.put(n.getLocation(), n); //Out of Bound exception if using array; need to change to hashmap
 				}
 			}
 		}
@@ -109,12 +111,12 @@ public class Datastore {
 		int validNodeCount = 0;
 		int emptyNodeCount = 0;
 		while (done == false) {
-			if (successors[position] != null) {
-				nodeToCopy = successors[position];
+			if (successors.get(position) != null) {
+				nodeToCopy = successors.get(position);
 				validNodeCount++;
 			} else {
 				if (nodeToCopy != null) {
-					successors[position] = nodeToCopy;
+					successors.put(position, nodeToCopy);
 				}
 				emptyNodeCount++;
 			}

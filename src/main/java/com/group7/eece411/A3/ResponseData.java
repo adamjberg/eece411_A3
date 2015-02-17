@@ -55,13 +55,13 @@ public class ResponseData extends Protocol {
 	}
 
 	@Override
-	public Integer getHeader(String Head) {
+	public byte[] getRawHeader(String Head) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public byte[] getRawHeader(String Head) {
+	public Integer getHeaderCode(String Head) {
 		// TODO Auto-generated method stub
 		return null;
 	}

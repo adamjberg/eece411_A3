@@ -67,43 +67,32 @@ public class RequestData extends Protocol {
 		HMdata.put("value-length", Arrays.copyOfRange(inBytes, 33, 33+VALUE_LENGTH_SIZE_IN_BYTES)); // the [33:34) the elements are the length
 
 		int val_len_int = ByteOrder.leb2int(HMdata.get("value-length"), 0, VALUE_LENGTH_SIZE_IN_BYTES);
-		System.out.println(val_len_int);
+		System.out.println("length of value : " + val_len_int);
 		if(MIN_MESSAGE_SIZE + val_len_int > inBytes.length || val_len_int > MAX_VALUE_LENGTH) { //Check the length of val
 			throw new NotFoundCmdException("Invalid value size."); 
 		}
 		
 		HMdata.put("value", Arrays.copyOfRange(inBytes, MIN_MESSAGE_SIZE, MIN_MESSAGE_SIZE+val_len_int));
 		
-		//check the validity of the retrieved data 
-		if (!checkCommandCode(HMdata.get("command")))
-		{
-			throw new NotFoundCmdException("Invalid Command code."); 
-		}
 		return new RequestData(HMdata.get("command"), HMdata.get("key"), HMdata.get("value-length"), HMdata.get("value"));	
 	}
 
 	@Override	
-	public Integer getHeader(String Head) {
+	public Integer getHeaderCode(String Head) {
 		byte[] bytes = HMdata.get(Head);
-		if(bytes.length >= 4) {
-			return ByteOrder.leb2int(bytes, 0);
-		}
-		return ByteOrder.leb2int(bytes, 0, bytes.length);
+		if(Head.equals("command") || Head.equals("value-length")) {
+			if(bytes.length >= 4) {
+				return ByteOrder.leb2int(bytes, 0);
+			}
+			return ByteOrder.leb2int(bytes, 0, bytes.length);
+		} 
+		return -1;
 	}
 	
 	public byte[] getRawHeader(String Head) {
 		return HMdata.get(Head);
 	}
 	
-	/**
-	 * Given a command byte this function checks the validity of the command.
-	 * I have some hard coded stuff but dont laugh  
-	 * */
-	private boolean checkCommandCode(byte[] comm)
-	{
-		return ByteOrder.leb2int(comm, 0, 1) < App.RequestCommand.values().length;
-	}
-
 	@Override
 	public byte[] toBytes() {
 		ByteBuffer byteBuffer = ByteBuffer.allocate(getMessageSizeInBytes())

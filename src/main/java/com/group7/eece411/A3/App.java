@@ -10,9 +10,15 @@ public class App {
 
 	public static void main(String[] args) throws Exception {
 		System.setProperty("java.net.preferIPv4Stack", "true");
-
-		App app = new App();
-		app.run();
+		try {
+			App app = new App();
+			app.run();
+		} catch(IOException ex) {
+			System.out.println(ex.getMessage());
+		} catch(Exception e) {
+			System.out.println(e.getMessage());
+			//TODO : send message to monitor server
+		}
 	}
 
 	public App() throws IOException {
@@ -27,10 +33,10 @@ public class App {
 	public void run() throws SocketException, IOException, NotFoundCmdException {
 		do {
 			try{
-				Protocol p = this.client.receive();
-				int result = p.getHeader("command");
-				System.out.println(result);
-				//TODO : pass to command
+				//comment out temporary for testing
+				//Protocol p = this.client.receive(); 
+				//createAgent(p);
+				testCase();
 			} catch(NotFoundCmdException ex) {
     			System.out.println(ex.toString());
     			//TODO : send response 0x05: Unrecognized command
@@ -39,49 +45,56 @@ public class App {
     			//TODO : send response 0x04: Internal KVStore failure
     		}
 			
-			//Let command class handle all these complex logic 
-			//App class is only responsible for receiving and respond if exception get thrown
-			
-			/*
-			int location = keyToLocation(p.getRawHeader("key")); 
-			
-			NodeInfo destNodeInfo = this.db.find(location);
-						
-			if(destNodeInfo == thisNode)
-			{
-				// TODO: Handle the request based on the RequestCommand
-			}
-			else
-			{
-				forwardRequestTo(receivedData, destNodeInfo);
-			}*/
+			//Let agent class handle all the complex logic 
+			//App class is only responsible for receiving and respond if exception get thrown			
 			
 		} while (true);
 	}
 	
-	/*
-	 * The simplest hash function, just take the first byte
-	 */
-	private int keyToLocation(String key)
-	{
-		byte[] bytes = StringUtils.hexStringToByteArray(key);
-		return bytes[0] + 128;
+	private void createAgent(Protocol p) throws NotFoundCmdException {
+		switch (p.getHeaderCode("command")) {
+			case 1: 
+				(new Thread(new AgentPut(db, p.getRawHeader("key"), p.getRawHeader("value")))).start();
+				break;
+			case 2: 
+				(new Thread(new AgentGet(db, p.getRawHeader("key")))).start();
+				break;
+			case 3: 
+				(new Thread(new AgentRemove(db, p.getRawHeader("key")))).start();
+				break;
+			case 4: 
+				break;
+			default:
+				throw new NotFoundCmdException("Invalid Command code."); 
+		}
 	}
-	
+	/*
+	 * This is a test method 
+	 */
+	private void testCase() throws NotFoundCmdException {
+		byte[] command = new byte[]{1};
+		byte[] key = new byte[32];
+		key[0] = 1;
+		key[1] = 1;
+		byte[] val_len = new byte[]{0, 1};
+		byte[] value = new byte[]{2};
+		RequestData rd = new RequestData(command, key, val_len, value);
+		createAgent(rd);
+		command = new byte[]{2};
+		key = new byte[32];
+		key[0] = 1;
+		key[1] = 1;
+		val_len = new byte[]{0, 1};
+		value = new byte[]{2};
+		RequestData rd2 = new RequestData(command, key, val_len, value);
+		createAgent(rd2);
+		while(true);
+	}
 	/*
 	 * This just passes the request on to the appropriate node
 	 */
 	private void forwardRequestTo(RequestData req, NodeInfo destNode) throws IllegalArgumentException, IOException
 	{
 		client.send(destNode.getHost(), destNode.getPort(), req);
-	}
-
-	public enum RequestCommand {
-		INVALID(0x00), PUT(0x01), GET(0x02), REMOVE(0x03), SHUTDOWN(0x04);
-		private byte value;
-
-		RequestCommand(int code) {
-			this.value = (byte) code;
-		}
 	}
 }
