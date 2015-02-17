@@ -108,7 +108,7 @@ public class RequestData extends Protocol {
 		ByteBuffer byteBuffer = ByteBuffer.allocate(getMessageSizeInBytes())
 				.order(java.nio.ByteOrder.LITTLE_ENDIAN);
 		byteBuffer.put(requestCommand.value);
-		byteBuffer.put(Arrays.copyOf(key.getBytes(), KEY_SIZE_IN_BYTES));
+		byteBuffer.put(Arrays.copyOf(StringUtils.hexStringToByteArray(key),KEY_SIZE_IN_BYTES));
 		if (value.length() > 0) {
 			byteBuffer.putShort((short) value.length());
 			byteBuffer.put(value.getBytes());

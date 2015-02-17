@@ -60,10 +60,9 @@ public class Datastore {
 				 */
 				if (self == null && isNodeInfoMine(n)) {
 					this.self = n;
-				} else {
-					if (n.getLocation() < CIRCLE_SIZE && n.getLocation() >= 0) {
-						this.successors[n.getLocation()] = n;
-					}
+				}
+				if (n.getLocation() < CIRCLE_SIZE && n.getLocation() >= 0) {
+					this.successors[n.getLocation()] = n;
 				}
 			}
 		}
@@ -99,7 +98,7 @@ public class Datastore {
 	 * location of the node. This allows constant time access for finding a
 	 * node.
 	 */
-	private void fillEmptyLocations() {		
+	private void fillEmptyLocations() {
 		boolean done = false;
 		int position = CIRCLE_SIZE - 1;
 		NodeInfo nodeToCopy = null;
@@ -110,8 +109,7 @@ public class Datastore {
 				nodeToCopy = successors[position];
 				validNodeCount++;
 			} else {
-				if(nodeToCopy != null)
-				{
+				if (nodeToCopy != null) {
 					successors[position] = nodeToCopy;
 				}
 				emptyNodeCount++;
@@ -119,12 +117,10 @@ public class Datastore {
 			position--;
 			if (position < 0) {
 				position = CIRCLE_SIZE - 1;
-				if(validNodeCount >= CIRCLE_SIZE || emptyNodeCount >= CIRCLE_SIZE)
-				{
+				if (validNodeCount >= CIRCLE_SIZE
+						|| emptyNodeCount >= CIRCLE_SIZE) {
 					done = true;
-				}
-				else
-				{
+				} else {
 					validNodeCount = 0;
 					emptyNodeCount = 0;
 				}

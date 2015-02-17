@@ -26,6 +26,7 @@ public class ResponseData extends Protocol {
 		this.value = value;
 	}
 
+	// TODO: This should be verified for correctness
 	@Override
 	public Protocol fromBytes(byte[] d) {
 		ByteBuffer byteBuffer = ByteBuffer.wrap(d).order(
@@ -47,6 +48,7 @@ public class ResponseData extends Protocol {
 		return new ResponseData(ResponseCode.values()[responseCode], value);
 	}
 
+	// TODO: This function needs to be implemented
 	@Override
 	public byte[] toBytes() {
 		return null;

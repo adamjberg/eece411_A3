@@ -1,22 +1,17 @@
 package com.group7.eece411.A3;
 
+import javax.xml.bind.DatatypeConverter;
+
 /**
  * Various static routines to help with strings
  */
 public class StringUtils {
 
-    public static String byteArrayToHexString(byte[] bytes) {
-        StringBuffer buf=new StringBuffer();
-        String       str;
-        int val;
+	public static String byteArrayToHexString(byte[] bytes) {
+		return DatatypeConverter.printHexBinary(bytes);
+	}
 
-        for (int i=0; i<bytes.length; i++) {
-            val = ByteOrder.ubyte2int(bytes[i]);
-            str = Integer.toHexString(val);
-            while ( str.length() < 2 )
-                str = "0" + str;
-            buf.append( str );
-        }
-        return buf.toString().toUpperCase();
-    }
+	public static byte[] hexStringToByteArray(String string) {
+		return DatatypeConverter.parseHexBinary(string);
+	}
 }
