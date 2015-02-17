@@ -1,4 +1,4 @@
-package com.group7.eece411.A3;
+package eece411_assg3_b;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
