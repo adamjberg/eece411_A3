@@ -33,11 +33,8 @@ public class App {
 		Packet p = null;
 		do {
 			try{
-				//comment out temporary for testing
 				p = this.client.receive(); 
-				createAgent(p);
-				p = null;
-				//testCase();
+				router(p);
 			}  catch(Exception e) {
     			System.out.println(e.toString());
     		}
@@ -48,17 +45,17 @@ public class App {
 		} while (true);
 	}
 	
-	private void createAgent(Packet p) throws IOException {
-		System.out.println("Creating agent..."+p.getHeader("command")[0]);
+	private void router(Packet p) throws IOException {
+		System.out.println("Routing...");
 		switch (p.getHeader("command")[0]) {
 			case 1: 
-				(new Thread(new AgentPut(p))).start();
+				(new AgentPut(p)).run();
 				break;
 			case 2: 
-				(new Thread(new AgentGet(p))).start();
+				(new AgentGet(p)).run();
 				break;
 			case 3: 
-				(new Thread(new AgentRemove(p))).start();
+				(new AgentRemove(p)).run();
 				break;
 			case 4: 
 				break;
@@ -67,23 +64,4 @@ public class App {
 				break;
 		}
 	}
-	/*
-	 * This is a test method 
-	 */
-	/*private void testCase() throws NotFoundCmdException, IOException {
-		createAgent(new RequestData(1, "deadbeef", new byte[]{2}, 7777)); //put("deadbeef", x02);
-		createAgent(new RequestData(2, "deadbeef", new byte[]{}, 7777)); //get("deadbeef");
-		createAgent(new RequestData(1, "deadbeef22", new byte[]{1,2,3}, 7777)); //put("deadbeef22", x01,x02,x03);
-		createAgent(new RequestData(2, "deadbeef22", new byte[]{}, 7777)); //get("deadbeef22");
-		createAgent(new RequestData(2, "deadbeef", new byte[]{}, 7777)); //get("deadbeef");
-		createAgent(new RequestData(1, "deadbeef22", new byte[]{2}, 7777)); //put("deadbeef22", x02);
-		createAgent(new RequestData(2, "deadbeef22", new byte[]{}, 7777)); //get("deadbeef22");
-		createAgent(new RequestData(1, "deadbeef22", new byte[]{1,2,3}, 7777)); //put("deadbeef22", x02);
-		createAgent(new RequestData(1, "deadbeef22", new byte[]{2}, 7777)); //put("deadbeef22", x02);
-		createAgent(new RequestData(1, "deadbeef22", new byte[]{1,4,1}, 7777)); //put("deadbeef22", x02);
-		createAgent(new RequestData(2, "deadbeef22", new byte[]{}, 7777)); //get("deadbeef22");
-		createAgent(new RequestData(3, "deadbeef22", new byte[]{}, 7777)); //remove("deadbeef22");
-		createAgent(new RequestData(2, "deadbeef22", new byte[]{}, 7777)); //get("deadbeef22");
-		while(true);
-	}*/
 }
