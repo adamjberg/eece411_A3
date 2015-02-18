@@ -23,7 +23,7 @@ public class AgentPut extends Agent {
 					
 				}
 			} else {
-				this.client.send(packet);
+				this.client.send(target.getHost(), target.getPort(), packet);	
 			}
 		} catch(Exception e) {
 			System.out.println(e.getMessage());

@@ -64,12 +64,19 @@ public class UDPClient {
 		if (p == null) {
 			throw new IllegalArgumentException();
 		}
+		this.send(p.getSourceIp(), p.getSourcePort(), p);
+	}
+	
+	public void send(String host, int port, Packet p) throws IOException {
+		if (host == null || p == null) {
+			throw new IllegalArgumentException();
+		}
 		System.out.println("Sending to "+p.getSourceIp()+":"+p.getSourcePort());
 		this.createSocket();
 		byte[] request = p.getBytes();
 		System.out.println("message going to be sent has size of "+request.length+" with response/command code : "+request[16]);
 		DatagramPacket packet = new DatagramPacket(request, request.length,
-				InetAddress.getByName(p.getSourceIp()), Integer.valueOf(p.getSourcePort()));
+				InetAddress.getByName(host), port);
 		socket.send(packet);
 	}
 	

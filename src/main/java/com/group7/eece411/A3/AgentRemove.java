@@ -22,7 +22,7 @@ public class AgentRemove extends Agent {
 				}
 			} else {
 				// send remote request
-				this.client.send(packet);
+				this.client.send(target.getHost(), target.getPort(), packet);	
 			}
 		} catch(Exception e) {
 			System.out.println(e.getMessage());
