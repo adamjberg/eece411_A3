@@ -13,6 +13,7 @@ public class NodeInfo {
 	private int port;
 	private int location;
 	private ConcurrentHashMap<String, byte[]> kvStore;
+	private long spaceAvailable = 64 * 1024 * 1024;
 	
 	public NodeInfo (String host, int port, int location) {
 		this.hostName = host;
@@ -29,12 +30,17 @@ public class NodeInfo {
 		if(this.kvStore.size() >= SPACESIZE) {
 			return false;
 		}
+		if(spaceAvailable - value.length < 0) {
+			return false;
+		}
+		spaceAvailable -= value.length;
 		this.kvStore.put(key, value);
 		return true;
 	}
 	
 	public void remove(String key) {
-		this.kvStore.remove(key);
+		byte[] bytesRemoved = this.kvStore.remove(key);
+		spaceAvailable += bytesRemoved.length;
 	}
 	
 	public String getHost() {
