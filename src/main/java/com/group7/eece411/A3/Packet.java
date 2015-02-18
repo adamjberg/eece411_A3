@@ -9,8 +9,8 @@ import java.nio.ByteBuffer;
  */
 public class Packet {
 
-	Header header;
-	byte[] payload;
+	private Header header;
+	private byte[] payload;
 	
 	public Packet(Header h) {
 		this.header = h;
@@ -40,6 +40,9 @@ public class Packet {
 		return this.header.getHeaderValue(headerName);
 	}
 	
+	/*
+	 * Convert a packet into a list of bytes
+	 */
 	public byte[] getBytes() {
 		ByteBuffer byteBuffer = ByteBuffer.allocate(this.header.size() + this.payload.length).order(java.nio.ByteOrder.LITTLE_ENDIAN);
 		byteBuffer.put(this.header.getBytes());

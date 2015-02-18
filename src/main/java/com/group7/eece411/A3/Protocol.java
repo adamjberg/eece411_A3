@@ -19,6 +19,9 @@ public class Protocol {
 	public static final int MIN_MESSAGE_SIZE = KEY_SIZE_IN_BYTES + COMMAND_SIZE_IN_BYTES; //As A3 document describe, Value-length is optional
 	public static final int MAX_MESSAGE_SIZE = VALUE_LENGTH_SIZE_IN_BYTES + MAX_VALUE_LENGTH + MIN_MESSAGE_SIZE;
 
+	/*
+	 * Create response packet for a request we received earlier.
+	 */
 	public static Packet sendResponse(Packet req, byte[] value, int responseCode) {
 		Header h = new Header();
 		decodeUniqueId(req.getUID(), h);
@@ -29,14 +32,25 @@ public class Protocol {
 		return new Packet(h, value);
 	}
 	
-	public static Packet receiveResponse() {
+	/*
+	 * Create a response packet from bytes we received. eg) we are receiving
+	 * response from a request we sent earlier.
+	 */
+	public static Packet receiveResponse(byte[] packet, Packet req) {
+		//TODO : check uniqueId etc.
 		return null;
 	}
 	
+	/*
+	 * Create request packet for sending
+	 */
 	public static Packet sendRequest() {
 		return null;
 	}
 	
+	/*
+	 * Create request packet from bytes we received.  We are receiving a request.
+	 */
 	public static Packet receiveRequest(byte[] packet) {
 		Packet p = null;
 		Header header = new Header();
@@ -72,6 +86,9 @@ public class Protocol {
 		return p;
 	}
 	
+	/*
+	 * Helper method to setup the header
+	 */
 	private static void decodeUniqueId(byte[] uniqueId, Header h) {
 		h.setUniqueId(uniqueId);
 		h.setField("sourceIP", Arrays.copyOfRange(uniqueId, 0, 4));
