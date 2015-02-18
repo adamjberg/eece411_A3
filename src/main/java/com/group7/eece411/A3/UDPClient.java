@@ -20,7 +20,7 @@ public class UDPClient {
 	private int timeout;
 	private DatagramSocket socket;
 	private Protocol res_protocol;
-
+	
 	public UDPClient(int port, Protocol res_protocol)
 			throws UnknownHostException {
 		this.source = InetAddress.getByName(InetAddress.getLocalHost()
@@ -62,16 +62,7 @@ public class UDPClient {
 
 	public void send(String host, int port, Protocol msg)
 			throws IllegalArgumentException, IOException {
-		this.send(host, port, msg.toBytes());
-	}
-
-	public Header send(String host, int port, byte[] bytesToSend)
-			throws IllegalArgumentException, IOException {
-		Header uniqueHeader = new Header(source, source_port);
-
-		byte[] uniqueId = uniqueHeader.generateUniqueID();
-		this.send(host, port, bytesToSend, uniqueId);
-		return uniqueHeader;
+		this.send(host, port, msg.toBytes(), msg.getUniqueId());
 	}
 
 	public void send(String host, int port, byte[] bytesToSend, byte[] uniqueId)

@@ -13,17 +13,27 @@ public class Header {
 	private int port;
 	private short randomNum;
 	private long timestamp;
+	private byte[] uniqueId;
 	
 	public Header(InetAddress s, int p) {
 		source = s;
 		port = p;
 	}
 	
-	public Header() {
-		source = null;
-		port = -1;
+	public Header(int port) throws UnknownHostException {
+		this.source = InetAddress.getByName(InetAddress.getLocalHost().getHostAddress());
+		this.port = port;
+		this.uniqueId = generateUniqueID();
 	}
 	
+	public Header(byte[] uniqueId) {
+		this.uniqueId = uniqueId;
+		//TODO : decode uniqueId and set timestamp, source, and port
+	}
+	
+	public byte[] getUniqueId() {
+		return this.uniqueId;
+	}
 	public byte[] generateUniqueID() {
 		timestamp = System.currentTimeMillis();
 		Random r = new Random(timestamp);
@@ -34,7 +44,8 @@ public class Header {
 					.putShort((short)this.port)
 					.put(new byte[2])
 					.putLong(timestamp);
-		return resultBuffer.array();
+		this.uniqueId = resultBuffer.array();
+		return this.uniqueId;
 	}
 	
 	public void decode(byte[] message) throws UnknownHostException {

@@ -66,4 +66,10 @@ public class ResponseData extends Protocol {
 		return null;
 	}
 
+	@Override
+	public byte[] getUniqueId() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

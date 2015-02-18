@@ -8,22 +8,16 @@ import java.util.List;
 
 public class Agent implements Runnable{
 	
-	protected byte[] key;
 	protected String decodeKey;
-	protected byte[] value;
 	protected NodeInfo target;
 	protected Datastore db;
+	protected Protocol protocol;
 	
-	public Agent(byte[] key, byte[] value) throws IOException {
-		this(key);
-		this.value = value;
-	}
-	
-	public Agent(byte[] key) throws IOException {
-		this.key = key;
-		this.decodeKey = StringUtils.byteArrayToHexString(key);
+	public Agent(Protocol p) throws IOException {
+		this.protocol = p;
+		this.decodeKey = StringUtils.byteArrayToHexString(p.getRawHeader("key"));
 		this.db = Datastore.getInstance();
-		target = getResponsibleNode(key);
+		target = getResponsibleNode(p.getRawHeader("key"));
 	}
 	
 	/*

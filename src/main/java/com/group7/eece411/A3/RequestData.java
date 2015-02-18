@@ -24,32 +24,39 @@ public class RequestData extends Protocol {
 	public static final int MAX_MESSAGE_SIZE = MAX_VALUE_LENGTH
 			+ MIN_MESSAGE_SIZE;
 
-	public Header header;
+	private Header header;
 	public String key;
 	public String value;
 	private HashMap <String, byte[]>  HMdata;
 	
-	public RequestData(int cmd, String key, byte[] value)
-			throws NotFoundCmdException, UnsupportedEncodingException {
-		this(new byte[]{(byte)cmd},StringUtils.hexStringToByteArray(key), ByteOrder.int2leb(value.length), value);
+	//For sending a request from this node to another, expecting respond through @port
+	public RequestData(int cmd, String key, byte[] value, int port)
+			throws NotFoundCmdException, UnsupportedEncodingException, UnknownHostException {
+		this(new byte[]{(byte)cmd},
+				StringUtils.hexStringToByteArray(key), 
+				ByteOrder.int2leb(value.length), value, new Header(port));
 	}
 
+	//For receiving a request, fields will be set once data is received
 	public RequestData() {
 		HMdata = new HashMap<String, byte[]> ();
 	}
 
-	public RequestData(byte[] c, byte[] k, byte[] val_len, byte[] r_v) {
+	//Clone the protocol or use it for forwarding a request to another node
+	public RequestData(byte[] c, byte[] k, byte[] val_len, byte[] r_v, Header h) {
 		HMdata = new HashMap<String, byte[]> (); 
 		HMdata.put("command", c);
 		HMdata.put("key", k);
 		HMdata.put("value-length", val_len);
 		HMdata.put("value", r_v);
-	}
+		this.header = h;
+	}	
 	
 	@Override
-	public Protocol fromBytes(byte[] inBytes) throws UnknownHostException,
+	public Protocol fromBytes(byte[] totalBytes) throws UnknownHostException,
 			NotFoundCmdException {
-
+		this.header = new Header(Arrays.copyOfRange(totalBytes, 0, 16));
+		byte[] inBytes = Arrays.copyOfRange(totalBytes, 16, totalBytes.length);
 		if (inBytes.length > MAX_MESSAGE_SIZE || inBytes.length < MIN_MESSAGE_SIZE)
 		{
 			throw new NotFoundCmdException("Request size is incorrect.");
@@ -68,7 +75,10 @@ public class RequestData extends Protocol {
 		
 		HMdata.put("value", Arrays.copyOfRange(inBytes, MIN_MESSAGE_SIZE, MIN_MESSAGE_SIZE+val_len_int));
 		
-		return new RequestData(HMdata.get("command"), HMdata.get("key"), HMdata.get("value-length"), HMdata.get("value"));	
+		return new RequestData(HMdata.get("command"), 
+								HMdata.get("key"), 
+								HMdata.get("value-length"), 
+								HMdata.get("value"), new Header(Arrays.copyOfRange(totalBytes, 0, 16)));	
 	}
 
 	@Override	
@@ -107,5 +117,10 @@ public class RequestData extends Protocol {
 		} else {
 			return MIN_MESSAGE_SIZE;
 		}
+	}
+
+	@Override
+	public byte[] getUniqueId() {
+		return this.header.getUniqueId();
 	}
 }

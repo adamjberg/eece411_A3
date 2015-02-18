@@ -4,19 +4,22 @@ import java.io.IOException;
 
 public class AgentPut extends Agent {
 
-	public AgentPut(byte[] key, byte[] value) throws IOException {
-		super(key, value);
+	public AgentPut(Protocol p) throws IOException {
+		super(p);
 	}
 
 	@Override
 	public void run() {
 		// TODO put key value pair into NodeInfo target
-		System.out.println("Put some value to "+target.getHost());
-		System.out.println("key : "+this.decodeKey);
+		System.out.println("Put some value to "+target.getHost() +"...");
 		try {
 			if(db.isThisNode(target)) {
-				if(!target.put(this.decodeKey, this.value)) {
+				if(!target.put(this.decodeKey, this.protocol.getRawHeader("value"))) {
 					//TODO : failed to put, 0x02 Out of space
+				} else {
+					System.out.println("put key : "+this.decodeKey+
+							", value : "+StringUtils.byteArrayToHexString(this.protocol.getRawHeader("value")) + 
+							" in "+target.getHost());
 				}
 			} else {
 				//TODO : send request to remote key

@@ -5,15 +5,14 @@ import java.util.ArrayList;
 
 public class AgentGet extends Agent {
 
-	public AgentGet(byte[] key) throws IOException {
-		super(key);
+	public AgentGet(Protocol p) throws IOException {
+		super(p);
 	}
 
 	@Override
 	public void run() {
 		
-		System.out.println("get a value from "+target.getHost());
-		System.out.println("key : "+this.decodeKey);
+		System.out.println("get a value from "+target.getHost() +"...");
 		//TODO : get the value from NodeInfo target 
 		byte[] value = null;
 		try {
@@ -25,7 +24,7 @@ public class AgentGet extends Agent {
 			if(value == null) {
 				//TODO : 0x01.  Non-existent key requested in a get or delete operation
 			} else {
-				
+				System.out.println("Value get from key : "+decodeKey + " is " +StringUtils.byteArrayToHexString(value));
 			}
 		} catch(Exception e) {
 			System.out.println(e.getMessage());

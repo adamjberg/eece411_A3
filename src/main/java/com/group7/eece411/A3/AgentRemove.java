@@ -4,8 +4,8 @@ import java.io.IOException;
 
 public class AgentRemove extends Agent {
 
-	public AgentRemove(byte[] key) throws IOException {
-		super(key);
+	public AgentRemove(Protocol p) throws IOException {
+		super(p);
 		// TODO Auto-generated constructor stub
 	}
 

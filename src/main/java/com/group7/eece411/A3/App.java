@@ -54,13 +54,13 @@ public class App {
 	private void createAgent(Protocol p) throws NotFoundCmdException, IOException {
 		switch (p.getHeaderCode("command")) {
 			case 1: 
-				(new Thread(new AgentPut(p.getRawHeader("key"), p.getRawHeader("value")))).start();
+				(new Thread(new AgentPut(p))).start();
 				break;
 			case 2: 
-				(new Thread(new AgentGet(p.getRawHeader("key")))).start();
+				(new Thread(new AgentGet(p))).start();
 				break;
 			case 3: 
-				(new Thread(new AgentRemove(p.getRawHeader("key")))).start();
+				(new Thread(new AgentRemove(p))).start();
 				break;
 			case 4: 
 				break;
@@ -72,28 +72,10 @@ public class App {
 	 * This is a test method 
 	 */
 	private void testCase() throws NotFoundCmdException, IOException {
-		byte[] command = new byte[]{1};
-		byte[] key = new byte[32];
-		byte[] decodeKey =  StringUtils.hexStringToByteArray("deadbeef");
-		if(decodeKey.length > 32) {
-			throw new NotFoundCmdException("key exceeds the length 32!");
-		}
-		System.arraycopy(decodeKey, 0, key, 0, decodeKey.length);
-		byte[] val_len = new byte[]{0, 1};
-		byte[] value = new byte[]{2};
-		RequestData rd = new RequestData(command, key, val_len, value);
-		createAgent(rd);
-		command = new byte[]{2};
-		key = new byte[32];
-		decodeKey = StringUtils.hexStringToByteArray("deadbeef");
-		if(decodeKey.length > 32) {
-			throw new NotFoundCmdException("key exceeds the length 32!");
-		}
-		System.arraycopy(decodeKey, 0, key, 0, decodeKey.length);
-		val_len = new byte[]{0, 1};
-		value = new byte[]{2};
-		RequestData rd2 = new RequestData(command, key, val_len, value);
-		createAgent(rd2);
+		createAgent(new RequestData(1, "deadbeef", new byte[]{2}, 7777)); //put("deadbeef", x02);
+		createAgent(new RequestData(2, "deadbeef", new byte[]{}, 7777)); //get("deadbeef");
+		createAgent(new RequestData(1, "deadbeef22", new byte[]{1,2,3}, 7777)); //put("deadbeef22", x01,x02,x03);
+		createAgent(new RequestData(2, "deadbeef22", new byte[]{}, 7777)); //get("deadbeef22");
 		while(true);
 	}
 	/*
