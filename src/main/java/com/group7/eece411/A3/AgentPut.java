@@ -11,13 +11,13 @@ public class AgentPut extends Agent {
 	@Override
 	public void run() {
 		// TODO put key value pair into NodeInfo target
-		System.out.println("Put some value to "+target.getHost() +"...");
+		System.out.println("PUT some value to "+target.getHost() +"...");
 		try {
 			if(db.isThisNode(target)) {
 				if(!target.put(this.decodeKey, this.protocol.getRawHeader("value"))) {
 					//TODO : failed to put, 0x02 Out of space
 				} else {
-					System.out.println("put key : "+this.decodeKey+
+					System.out.println("PUT key : "+this.decodeKey+
 							", value : "+StringUtils.byteArrayToHexString(this.protocol.getRawHeader("value")) + 
 							" in "+target.getHost());
 				}

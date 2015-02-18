@@ -76,6 +76,15 @@ public class App {
 		createAgent(new RequestData(2, "deadbeef", new byte[]{}, 7777)); //get("deadbeef");
 		createAgent(new RequestData(1, "deadbeef22", new byte[]{1,2,3}, 7777)); //put("deadbeef22", x01,x02,x03);
 		createAgent(new RequestData(2, "deadbeef22", new byte[]{}, 7777)); //get("deadbeef22");
+		createAgent(new RequestData(2, "deadbeef", new byte[]{}, 7777)); //get("deadbeef");
+		createAgent(new RequestData(1, "deadbeef22", new byte[]{2}, 7777)); //put("deadbeef22", x02);
+		createAgent(new RequestData(2, "deadbeef22", new byte[]{}, 7777)); //get("deadbeef22");
+		createAgent(new RequestData(1, "deadbeef22", new byte[]{1,2,3}, 7777)); //put("deadbeef22", x02);
+		createAgent(new RequestData(1, "deadbeef22", new byte[]{2}, 7777)); //put("deadbeef22", x02);
+		createAgent(new RequestData(1, "deadbeef22", new byte[]{1,4,1}, 7777)); //put("deadbeef22", x02);
+		createAgent(new RequestData(2, "deadbeef22", new byte[]{}, 7777)); //get("deadbeef22");
+		createAgent(new RequestData(3, "deadbeef22", new byte[]{}, 7777)); //remove("deadbeef22");
+		createAgent(new RequestData(2, "deadbeef22", new byte[]{}, 7777)); //get("deadbeef22");
 		while(true);
 	}
 	/*

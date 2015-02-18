@@ -12,7 +12,7 @@ public class AgentGet extends Agent {
 	@Override
 	public void run() {
 		
-		System.out.println("get a value from "+target.getHost() +"...");
+		System.out.println("GET a value from "+target.getHost() +"...");
 		//TODO : get the value from NodeInfo target 
 		byte[] value = null;
 		try {
@@ -20,11 +20,13 @@ public class AgentGet extends Agent {
 				value = target.get(decodeKey);
 			} else {
 				//TODO : send request to remote node
+				
 			}
 			if(value == null) {
 				//TODO : 0x01.  Non-existent key requested in a get or delete operation
+				System.out.println("Cannot GET the value, key : "+decodeKey);
 			} else {
-				System.out.println("Value get from key : "+decodeKey + " is " +StringUtils.byteArrayToHexString(value));
+				System.out.println("Value GET from key : "+decodeKey + " is " +StringUtils.byteArrayToHexString(value));
 			}
 		} catch(Exception e) {
 			System.out.println(e.getMessage());

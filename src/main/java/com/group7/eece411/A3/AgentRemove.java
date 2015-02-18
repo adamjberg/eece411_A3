@@ -12,11 +12,12 @@ public class AgentRemove extends Agent {
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
-		System.out.println("Remove something from "+target.getHost());
+		System.out.println("REMOVE something from "+target.getHost());
 		System.out.println("key : "+this.decodeKey);
 		try {
 			if(db.isThisNode(target)) {
 				target.remove(this.decodeKey);
+				System.out.println("REMOVED "+this.decodeKey);
 			} else {
 				//TODO : send remote request
 			}
