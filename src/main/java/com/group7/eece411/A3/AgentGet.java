@@ -20,7 +20,7 @@ public class AgentGet extends Agent {
 					respondUnscucessful(1);
 				} else {
 					System.out.println("Value GET from key : "+decodeKey + " is " +StringUtils.byteArrayToHexString(value));
-					//TODO : response back with 0x00 success
+					repondsuccess();
 				}
 			} else {
 				// send request to remote node

@@ -20,6 +20,7 @@ public class AgentPut extends Agent {
 					System.out.println("PUT key : "+this.decodeKey+
 							", value : "+StringUtils.byteArrayToHexString(this.protocol.getRawHeader("value")) + 
 							" in "+target.getHost());
+					repondsuccess();
 				}
 			} else {
 				//send request to remote key

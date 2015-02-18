@@ -6,7 +6,6 @@ public class AgentRemove extends Agent {
 
 	public AgentRemove(Protocol p) throws IOException {
 		super(p);
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override
@@ -17,7 +16,7 @@ public class AgentRemove extends Agent {
 			if(db.isThisNode(target)) {
 				target.remove(this.decodeKey);
 				System.out.println("REMOVED "+this.decodeKey);
-				//TODO : send 0x00 success
+				repondsuccess();
 			} else {
 				// send remote request
 				//UDPClient local_client = new UDPClient(sending_port, protocol);

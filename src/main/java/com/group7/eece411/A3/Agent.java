@@ -62,4 +62,8 @@ public class Agent implements Runnable{
 			//TODO : send to monitor server;
 		} 
 	}
+	
+	protected void repondsuccess() {
+		//TODO : need to implement this to respond 0x00
+	}
 }
