@@ -3,6 +3,10 @@ package com.group7.eece411.A3;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+
+/**
+ * This class is used to construct Response messages.
+ * */
 public class ResponseData extends Protocol {
 
 	public static final int KEY_SIZE = 32;
@@ -31,7 +35,7 @@ public class ResponseData extends Protocol {
 	public Protocol fromBytes(byte[] d) {
 		ByteBuffer byteBuffer = ByteBuffer.wrap(d).order(
 				ByteOrder.LITTLE_ENDIAN);
-
+		
 		char responseCode = byteBuffer.getChar();
 		int valueLength = byteBuffer.getShort();
 
@@ -44,7 +48,6 @@ public class ResponseData extends Protocol {
 		} else {
 			System.out.println("Invalid Value, using empty string");
 		}
-
 		return new ResponseData(ResponseCode.values()[responseCode], value);
 	}
 

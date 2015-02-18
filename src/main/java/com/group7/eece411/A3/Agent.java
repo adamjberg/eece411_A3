@@ -8,7 +8,17 @@ import java.util.List;
 
 public class Agent implements Runnable{
 	
+	// This port is used to resend the request to the node that is responsible 
+	protected int  sending_port = 7777; 
+	
+	// what does this decode key do?
 	protected String decodeKey;
+	
+	
+	/* Ehsan Added this so not sure if Danny meant this: 
+	 * target Holds the information regarding the responsible node for a specified key. 
+	 * That is the node target has the value for the key requested.
+	 * */
 	protected NodeInfo target;
 	protected Datastore db;
 	protected Protocol protocol;
