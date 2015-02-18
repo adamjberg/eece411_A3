@@ -26,15 +26,14 @@ public class Header {
 		this.uniqueId = generateUniqueID();
 	}
 	
-	public Header(byte[] uniqueId) {
+	public Header(byte[] uniqueId) throws UnknownHostException {
 		this.uniqueId = uniqueId;
-		//TODO : decode uniqueId and set timestamp, source, and port
+		decode(uniqueId);
 	}
 	
 	public Header clone() {
-		Header result = new Header(this.getUniqueId());
-		result.port = this.getPort();
-		result.source = this.getIP();
+		Header result = new Header(this.getIP(), this.getPort());
+		result.uniqueId = this.getUniqueId();
 		result.timestamp = this.getTimestamp();
 		return result;
 	}

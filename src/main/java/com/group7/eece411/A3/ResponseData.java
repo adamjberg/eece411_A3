@@ -64,7 +64,8 @@ public class ResponseData extends Protocol {
 	}
 
 	@Override
-	public byte[] toBytes() {
+	public byte[] toBytes() { 
+		System.out.println("Construct bytes to be sent.");
 		ByteBuffer byteBuffer = ByteBuffer.allocate(MIN_MESSAGE_SIZE + HMdata.get("value").length)
 				.order(java.nio.ByteOrder.LITTLE_ENDIAN);
 		byteBuffer.put(HMdata.get("response"));
@@ -100,5 +101,11 @@ public class ResponseData extends Protocol {
 	@Override
 	public Header getHeader() {
 		return this.header;
+	}
+
+	@Override
+	public void set(String head, byte[] value) {
+		this.HMdata.put(head, value);
+		
 	}
 }

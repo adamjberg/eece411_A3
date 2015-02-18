@@ -10,17 +10,16 @@ public class AgentPut extends Agent {
 
 	@Override
 	public void run() {
-		// TODO put key value pair into NodeInfo target
 		System.out.println("PUT some value to "+target.getHost() +"...");
 		try {
 			if(db.isThisNode(target)) {
 				if(!target.put(this.decodeKey, this.protocol.getRawHeader("value"))) {
-					respondUnscucessful(2);	
+					respond(2, this.protocol);	
 				} else {
 					System.out.println("PUT key : "+this.decodeKey+
 							", value : "+StringUtils.byteArrayToHexString(this.protocol.getRawHeader("value")) + 
 							" in "+target.getHost());
-					repondsuccess();
+					respond(0, this.protocol);	
 				}
 			} else {
 				//send request to remote key
@@ -30,7 +29,7 @@ public class AgentPut extends Agent {
 			}
 		} catch(Exception e) {
 			System.out.println(e.getMessage());
-			respondUnscucessful(4);	
+			respond(4, this.protocol);	
 		}
 	}
 

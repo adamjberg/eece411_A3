@@ -17,10 +17,11 @@ public class AgentGet extends Agent {
 				value = target.get(decodeKey);			
 				if(value == null) {
 					System.out.println("Cannot GET the value, key : "+decodeKey);
-					respondUnscucessful(1);
+					respond(1, this.protocol);
 				} else {
 					System.out.println("Value GET from key : "+decodeKey + " is " +StringUtils.byteArrayToHexString(value));
-					repondsuccess();
+					this.protocol.set("value", target.get(decodeKey));
+					respond(0, this.protocol);
 				}
 			} else {
 				// send request to remote node
@@ -31,7 +32,7 @@ public class AgentGet extends Agent {
 			}
 		} catch(Exception e) {
 			System.out.println(e.getMessage());
-			respondUnscucessful(4);			
+			respond(4, this.protocol);			
 			
 		}
 	}

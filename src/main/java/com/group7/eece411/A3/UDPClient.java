@@ -71,6 +71,7 @@ public class UDPClient {
 
 	public void send(String host, int port, byte[] bytesToSend, byte[] uniqueId)
 			throws IllegalArgumentException, IOException {
+		System.out.println("Sending to "+host+":"+port);
 		if (host == null || host.isEmpty() || bytesToSend == null) {
 			throw new IllegalArgumentException();
 		}
@@ -78,7 +79,7 @@ public class UDPClient {
 		byte[] request = constructByteRequest(uniqueId, bytesToSend);
 		DatagramPacket packet = new DatagramPacket(request, request.length,
 				InetAddress.getByName(host), Integer.valueOf(port));
-		System.out.println("message going to be sent has size of "+request.length);
+		System.out.println("message going to be sent has size of "+request.length+" with response/command code : "+request[16]);
 		socket.send(packet);
 	}
 
@@ -89,6 +90,8 @@ public class UDPClient {
 		DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 		socket.setSoTimeout(this.timeout);
 		socket.receive(packet);
+		System.out.println("*************************************************");
+		System.out.println("Receive packet length : "+packet.getLength());
 		return this.res_protocol.fromBytes(Arrays.copyOfRange(buffer, 0,
 				packet.getLength()));
 	}

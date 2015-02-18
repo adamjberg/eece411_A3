@@ -10,13 +10,16 @@ public class AgentRemove extends Agent {
 
 	@Override
 	public void run() {
-		System.out.println("REMOVE something from "+target.getHost());
-		System.out.println("key : "+this.decodeKey);
+		System.out.println("REMOVE key("+this.decodeKey+") from "+target.getHost());
 		try {
 			if(db.isThisNode(target)) {
-				target.remove(this.decodeKey);
-				System.out.println("REMOVED "+this.decodeKey);
-				repondsuccess();
+				if(target.get(decodeKey) != null) {
+					target.remove(this.decodeKey);
+					System.out.println("REMOVED "+this.decodeKey);
+					respond(0, this.protocol);	
+				} else {
+					respond(1, this.protocol);	
+				}
 			} else {
 				// send remote request
 				//UDPClient local_client = new UDPClient(sending_port, protocol);
@@ -25,7 +28,7 @@ public class AgentRemove extends Agent {
 			}
 		} catch(Exception e) {
 			System.out.println(e.getMessage());
-			respondUnscucessful(4);	
+			respond(4, this.protocol);	
 		}
 	}
 

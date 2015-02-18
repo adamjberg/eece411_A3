@@ -33,10 +33,11 @@ public class Agent implements Runnable{
 	 * Get the node that responsible for the key, it can be the caller node or other remote nodes
 	 */
 	private NodeInfo getResponsibleNode(byte[] key) {
+		System.out.println("Finding node...");
 		List<Integer> allLocations = db.findAllLocations();
 		Integer closestLocation = null;
 		for(Integer loc : allLocations) {
-			if(loc < key[0] && loc > closestLocation) {
+			if(loc < key[0] && (closestLocation == null || loc > closestLocation)) {
 				closestLocation = loc;
 			}
 		}
@@ -51,19 +52,23 @@ public class Agent implements Runnable{
 		
 	}
 	
-	protected void respondUnscucessful(int responseCode) {
+	public static void respond(int responseCode, Protocol p) {
 		try {
-			Protocol res = new ResponseData(protocol.getHeader().clone(), responseCode, new byte[]{});
-			this.client.send(protocol.getHeader().getIP().getHostAddress(), 
-								protocol.getHeader().getPort(), res);
-			this.client.closeSocket();
+			UDPClient c = new UDPClient();
+			byte[] value = new byte[0];
+			if(responseCode == 0 && p.getHeaderCode("command") == 2) {				
+				value = p.getRawHeader("value");
+				System.out.println("Sending value "+value.length);
+			}
+			Protocol res = new ResponseData(p.getHeader().clone(), responseCode, value);
+			System.out.println("Sending response...");
+			c.send(p.getHeader().getIP().getHostAddress(), 
+								p.getHeader().getPort(), res);
+			c.closeSocket();
 		} catch (Exception ex) {
 			System.out.println(ex.getMessage());
 			//TODO : send to monitor server;
 		} 
 	}
 	
-	protected void repondsuccess() {
-		//TODO : need to implement this to respond 0x00
-	}
 }

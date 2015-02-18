@@ -31,18 +31,20 @@ public class App {
 	}
 
 	public void run() throws SocketException, IOException, NotFoundCmdException {
+		Protocol p = null;
 		do {
 			try{
 				//comment out temporary for testing
-				//Protocol p = this.client.receive(); 
-				//createAgent(p);
-				testCase();
+				p = this.client.receive(); 
+				createAgent(p);
+				p = null;
+				//testCase();
 			} catch(NotFoundCmdException ex) {
-    			System.out.println(ex.toString());
-    			//TODO : send response 0x05: Unrecognized command
+				System.out.println("NotFoundCmdException thrown");
+    			System.out.println(ex.getMessage());
     		} catch(Exception e) {
     			System.out.println(e.getMessage());
-    			//TODO : send response 0x04: Internal KVStore failure
+				System.out.println("Exception thrown");
     		}
 			
 			//Let agent class handle all the complex logic 
@@ -51,7 +53,8 @@ public class App {
 		} while (true);
 	}
 	
-	private void createAgent(Protocol p) throws NotFoundCmdException, IOException {
+	private void createAgent(Protocol p) throws IOException {
+		System.out.println("Creating agent...");
 		switch (p.getHeaderCode("command")) {
 			case 1: 
 				(new Thread(new AgentPut(p))).start();
@@ -65,7 +68,8 @@ public class App {
 			case 4: 
 				break;
 			default:
-				throw new NotFoundCmdException("Invalid Command code."); 
+				Agent.respond(5, p);
+				break;
 		}
 	}
 	/*

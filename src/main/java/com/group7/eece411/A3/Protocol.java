@@ -21,4 +21,5 @@ public abstract class Protocol {
 	public abstract byte[] getRawHeader(String Head);
 	public abstract byte[] getUniqueId();
 	public abstract Header getHeader();
+	public abstract void set(String head, byte[] value);
 }

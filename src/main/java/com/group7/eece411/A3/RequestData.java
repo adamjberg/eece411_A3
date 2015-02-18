@@ -63,6 +63,7 @@ public class RequestData extends Protocol {
 		byte[] inBytes = Arrays.copyOfRange(totalBytes, 16, totalBytes.length);
 		if (inBytes.length > MAX_MESSAGE_SIZE || inBytes.length < MIN_MESSAGE_SIZE)
 		{
+			Agent.respond(5, this);
 			throw new NotFoundCmdException("Request size is incorrect.");
 		}
 		
@@ -70,15 +71,19 @@ public class RequestData extends Protocol {
 		HMdata.put("command", new byte[] {inBytes[0]});// The first elemt is the Response code 
 		HMdata.put("key", Arrays.copyOfRange(inBytes, 1, KEY_SIZE_IN_BYTES+1)); // the [1:32) the elements are the length
 		HMdata.put("value-length", Arrays.copyOfRange(inBytes, 33, 33+VALUE_LENGTH_SIZE_IN_BYTES)); // the [33:34) the elements are the length
-
+		System.out.println("command : "+HMdata.get("command")[0]);
+		System.out.println("key : "+StringUtils.byteArrayToHexString(HMdata.get("key")));
 		int val_len_int = ByteOrder.leb2int(HMdata.get("value-length"), 0, VALUE_LENGTH_SIZE_IN_BYTES);
 		System.out.println("length of value : " + val_len_int);
 		if(MIN_MESSAGE_SIZE + val_len_int > inBytes.length || val_len_int > MAX_VALUE_LENGTH) { //Check the length of val
+			Agent.respond(5, this);
 			throw new NotFoundCmdException("Invalid value size."); 
 		}
-		
-		HMdata.put("value", Arrays.copyOfRange(inBytes, MIN_MESSAGE_SIZE, MIN_MESSAGE_SIZE+val_len_int));
-		
+		if(val_len_int > 0) {
+			HMdata.put("value", Arrays.copyOfRange(inBytes, MIN_MESSAGE_SIZE, MIN_MESSAGE_SIZE+val_len_int));
+		} else {
+			HMdata.put("value", new byte[0]);
+		}
 		return new RequestData(HMdata.get("command"), 
 								HMdata.get("key"), 
 								HMdata.get("value-length"), 
@@ -130,5 +135,11 @@ public class RequestData extends Protocol {
 	@Override
 	public Header getHeader() {
 		return this.header;
+	}
+
+	@Override
+	public void set(String head, byte[] value) {
+		this.HMdata.put(head, value);
+		
 	}
 }
