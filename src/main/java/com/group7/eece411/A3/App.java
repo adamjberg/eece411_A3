@@ -29,7 +29,7 @@ public class App {
 		this.client.createSocket();
 	}
 
-	public void run() throws SocketException, IOException {
+	public void run() throws IOException {
 		Packet p = null;
 		do {
 			try{
@@ -38,10 +38,6 @@ public class App {
 			}  catch(Exception e) {
     			System.out.println(e.toString());
     		}
-			
-			//Let agent class handle all the complex logic 
-			//App class is only responsible for receiving and respond if exception get thrown			
-			
 		} while (true);
 	}
 	
