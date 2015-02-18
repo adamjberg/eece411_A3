@@ -1,9 +1,6 @@
 package com.group7.eece411.A3;
 
 import java.io.IOException;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.List;
 
 public class Agent implements Runnable{

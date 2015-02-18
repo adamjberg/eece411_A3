@@ -1,9 +1,6 @@
 package com.group7.eece411.A3;
 
 import java.io.IOException;
-import java.util.ArrayList;
-
-import com.group7.eece411.A3.ResponseData.ResponseCode;
 
 public class AgentGet extends Agent {
 	
