@@ -19,23 +19,23 @@ public class AgentGet extends Agent {
 		byte[] value = null;
 		try {
 			if(db.isThisNode(target)) {
-				value = target.get(decodeKey);
+				value = target.get(decodeKey);			
+				if(value == null) {
+					System.out.println("Cannot GET the value, key : "+decodeKey);
+					Protocol res = new ResponseData(protocol.getHeader().clone(), 1, new byte[]{});
+					this.client.send(protocol.getHeader().getIP().getHostAddress(), 
+										protocol.getHeader().getPort(), res);
+					this.client.closeSocket();
+				} else {
+					System.out.println("Value GET from key : "+decodeKey + " is " +StringUtils.byteArrayToHexString(value));
+					//TODO : response back with 0x00 success
+				}
 			} else {
 				// send request to remote node
 				// sending_port is 7777 now -> not sure if itz the right port
 				//UDPClient local_client = new UDPClient(sending_port, protocol);
 				this.client.send(target.getHost(), target.getPort(), protocol);
-				this.client.closeSocket();
-				
-			}
-			if(value == null) {
-				System.out.println("Cannot GET the value, key : "+decodeKey);
-				Protocol res = new ResponseData(protocol.getHeader().clone(), 1, new byte[]{});
-				this.client.send(protocol.getHeader().getIP().getHostAddress(), 
-									protocol.getHeader().getPort(), res);
-				this.client.closeSocket();
-			} else {
-				System.out.println("Value GET from key : "+decodeKey + " is " +StringUtils.byteArrayToHexString(value));
+				this.client.closeSocket();				
 			}
 		} catch(Exception e) {
 			System.out.println(e.getMessage());
