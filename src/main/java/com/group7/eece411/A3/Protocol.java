@@ -11,6 +11,9 @@ import java.net.UnknownHostException;
  *
  */
 public abstract class Protocol {
+
+
+	
 	
 	public abstract Protocol fromBytes(byte[] d) throws UnknownHostException, NotFoundCmdException;
 	public abstract byte[] toBytes();

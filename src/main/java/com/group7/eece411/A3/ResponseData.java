@@ -3,6 +3,10 @@ package com.group7.eece411.A3;
 import java.nio.ByteBuffer;
 import java.util.concurrent.ConcurrentHashMap;
 
+
+/**
+ * This class is used to construct Response messages.
+ * */
 public class ResponseData extends Protocol {
 
 	public static final int RESPONSE_SIZE_IN_BYTES = 1;
@@ -43,8 +47,7 @@ public class ResponseData extends Protocol {
 	@Override
 	public Protocol fromBytes(byte[] d) {
 		ByteBuffer byteBuffer = ByteBuffer.wrap(d).order(
-				java.nio.ByteOrder.LITTLE_ENDIAN);
-
+				java.nio.ByteOrder.LITTLE_ENDIAN);		
 		char responseCode = byteBuffer.getChar();
 		int valueLength = byteBuffer.getShort();
 
@@ -57,7 +60,6 @@ public class ResponseData extends Protocol {
 		} else {
 			System.out.println("Invalid Value, using empty string");
 		}
-
 		return new ResponseData(ResponseCode.values()[responseCode], value);
 	}
 

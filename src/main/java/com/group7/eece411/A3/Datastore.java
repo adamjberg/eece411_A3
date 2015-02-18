@@ -15,6 +15,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+
+
+/**
+ * Ehsan Added this so it might not be complete: 
+ * This class holds the data that each node needs. That is: 
+ * - list of (key, value) pairs taht is stored in node itself
+ * - list of the (key, responsible node) pair -> which node has the value for the key
+ * */
 public class Datastore {
 	public static int CIRCLE_SIZE = 256;
 
@@ -27,6 +35,7 @@ public class Datastore {
 		setupNodes();
 	}
 
+	// Why do we need this ? 
 	public static Datastore getInstance() throws IOException {
 		if (instance == null) {
 			instance = new Datastore();
@@ -34,6 +43,7 @@ public class Datastore {
 		return instance;
 	}
 
+	// What does this location mean ?
 	public NodeInfo find(int location) {
 		return this.successors.get(location);
 	}

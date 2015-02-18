@@ -22,7 +22,10 @@ public class AgentPut extends Agent {
 							" in "+target.getHost());
 				}
 			} else {
-				//TODO : send request to remote key
+				//send request to remote key
+				//UDPClient local_client = new UDPClient(sending_port, protocol);
+				this.client.send(target.getHost(), target.getPort(), protocol);
+				this.client.closeSocket();
 			}
 		} catch(Exception e) {
 			System.out.println(e.getMessage());

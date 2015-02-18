@@ -19,7 +19,10 @@ public class AgentRemove extends Agent {
 				target.remove(this.decodeKey);
 				System.out.println("REMOVED "+this.decodeKey);
 			} else {
-				//TODO : send remote request
+				// send remote request
+				//UDPClient local_client = new UDPClient(sending_port, protocol);
+				this.client.send(target.getHost(), target.getPort(), protocol);
+				this.client.closeSocket();
 			}
 		} catch(Exception e) {
 			System.out.println(e.getMessage());

@@ -13,6 +13,10 @@ import java.util.HashMap;
  * @author Ehsan
  * 
  */
+
+/**
+ * This class is used to construct Request messages.
+ * */
 public class RequestData extends Protocol {
 
 	public static final int COMMAND_SIZE_IN_BYTES = 1;
