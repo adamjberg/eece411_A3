@@ -15,7 +15,7 @@ public class AgentPut extends Agent {
 		try {
 			if(db.isThisNode(target)) {
 				if(!target.put(this.decodeKey, this.protocol.getRawHeader("value"))) {
-					//TODO : failed to put, 0x02 Out of space
+					respondUnscucessful(2);	
 				} else {
 					System.out.println("PUT key : "+this.decodeKey+
 							", value : "+StringUtils.byteArrayToHexString(this.protocol.getRawHeader("value")) + 
@@ -29,7 +29,7 @@ public class AgentPut extends Agent {
 			}
 		} catch(Exception e) {
 			System.out.println(e.getMessage());
-			//TODO : send 0x04.  Internal KVStore failure
+			respondUnscucessful(4);	
 		}
 	}
 

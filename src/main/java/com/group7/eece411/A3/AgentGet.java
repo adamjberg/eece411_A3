@@ -12,20 +12,15 @@ public class AgentGet extends Agent {
 	}
 
 	@Override
-	public void run() {
-		
+	public void run() {		
 		System.out.println("GET a value from "+target.getHost() +"...");
-		//TODO : get the value from NodeInfo target.  
 		byte[] value = null;
 		try {
 			if(db.isThisNode(target)) {
 				value = target.get(decodeKey);			
 				if(value == null) {
 					System.out.println("Cannot GET the value, key : "+decodeKey);
-					Protocol res = new ResponseData(protocol.getHeader().clone(), 1, new byte[]{});
-					this.client.send(protocol.getHeader().getIP().getHostAddress(), 
-										protocol.getHeader().getPort(), res);
-					this.client.closeSocket();
+					respondUnscucessful(1);
 				} else {
 					System.out.println("Value GET from key : "+decodeKey + " is " +StringUtils.byteArrayToHexString(value));
 					//TODO : response back with 0x00 success
@@ -39,7 +34,7 @@ public class AgentGet extends Agent {
 			}
 		} catch(Exception e) {
 			System.out.println(e.getMessage());
-			//TODO : send 0x04.  Internal KVStore failure
+			respondUnscucessful(4);			
 			
 		}
 	}

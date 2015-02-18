@@ -53,4 +53,16 @@ public class Agent implements Runnable{
 	public void run() {
 		
 	}
+	
+	protected void respondUnscucessful(int responseCode) {
+		try {
+			Protocol res = new ResponseData(protocol.getHeader().clone(), responseCode, new byte[]{});
+			this.client.send(protocol.getHeader().getIP().getHostAddress(), 
+								protocol.getHeader().getPort(), res);
+			this.client.closeSocket();
+		} catch (Exception ex) {
+			System.out.println(ex.getMessage());
+			//TODO : send to monitor server;
+		} 
+	}
 }

@@ -11,13 +11,13 @@ public class AgentRemove extends Agent {
 
 	@Override
 	public void run() {
-		// TODO Auto-generated method stub
 		System.out.println("REMOVE something from "+target.getHost());
 		System.out.println("key : "+this.decodeKey);
 		try {
 			if(db.isThisNode(target)) {
 				target.remove(this.decodeKey);
 				System.out.println("REMOVED "+this.decodeKey);
+				//TODO : send 0x00 success
 			} else {
 				// send remote request
 				//UDPClient local_client = new UDPClient(sending_port, protocol);
@@ -26,7 +26,7 @@ public class AgentRemove extends Agent {
 			}
 		} catch(Exception e) {
 			System.out.println(e.getMessage());
-			//TODO : send 0x04.  Internal KVStore failure
+			respondUnscucessful(4);	
 		}
 	}
 
