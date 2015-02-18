@@ -5,10 +5,10 @@ package com.group7.eece411.A3;
 
 import java.util.Arrays;
 
-
 /**
- * @author Ehsan
- *
+ * This class holds the rules on how a Packet should be formatted.  While the Packet class provides
+ * an abstraction to the formats of header, this class provides an abstraction to the
+ * construction of packet.
  */
 public class Protocol {
 	
@@ -27,6 +27,14 @@ public class Protocol {
 			h.setField("value-length", ByteOrder.int2leb(value.length));
 		}
 		return new Packet(h, value);
+	}
+	
+	public static Packet receiveResponse() {
+		return null;
+	}
+	
+	public static Packet sendRequest() {
+		return null;
 	}
 	
 	public static Packet receiveRequest(byte[] packet) {

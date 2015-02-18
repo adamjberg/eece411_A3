@@ -42,25 +42,5 @@ public class Agent implements Runnable{
 		
 	public void run() {
 		
-	}
-	
-	/*public static void respond(int responseCode, Packet p) {
-		try {
-			UDPClient c = new UDPClient();
-			byte[] value = new byte[0];
-			if(responseCode == 0 && p.getHeader("command")[0] == 2) {				
-				value = p.getHeader("value");
-				System.out.println("Sending value "+value.length);
-			}
-			Protocol res = new ResponseData(p.getHeader().clone(), responseCode, value);
-			System.out.println("Sending response...");
-			c.send(p.getHeader().getIP(), 
-								p.getHeader().getPort(), res);
-			c.closeSocket();
-		} catch (Exception ex) {
-			System.out.println(ex.getMessage());
-			//TODO : send to monitor server;
-		} 
-	}*/
-	
+	}	
 }

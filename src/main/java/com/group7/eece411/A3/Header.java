@@ -1,13 +1,14 @@
 package com.group7.eece411.A3;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
+/*
+ * Header contains everything inside a packet beside the payload.  This class
+ * make sure the order of header is correct and can be converted into byte[].
+ */
 public class Header {
 	public static final int LENGTH_IN_BYTES = 16;
 	

@@ -14,9 +14,9 @@ public class App {
 			App app = new App();
 			app.run();
 		} catch(IOException ex) {
-			System.out.println(ex.getMessage());
+			System.out.println(ex.toString());
 		} catch(Exception e) {
-			System.out.println(e.getMessage());
+			System.out.println(e.toString());
 			//TODO : send message to monitor server
 		}
 	}
@@ -29,7 +29,7 @@ public class App {
 		this.client.createSocket();
 	}
 
-	public void run() throws SocketException, IOException, NotFoundCmdException {
+	public void run() throws SocketException, IOException {
 		Packet p = null;
 		do {
 			try{
@@ -39,8 +39,7 @@ public class App {
 				p = null;
 				//testCase();
 			}  catch(Exception e) {
-    			System.out.println(e.getMessage());
-				System.out.println("Exception thrown");
+    			System.out.println(e.toString());
     		}
 			
 			//Let agent class handle all the complex logic 

@@ -6,8 +6,6 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
 import java.util.Arrays;
 
 /**
@@ -16,14 +14,14 @@ import java.util.Arrays;
  */
 public class UDPClient {
 	private InetAddress source;
-	private int source_port;
+	private int listenPort;
 	private int timeout;
 	private DatagramSocket socket;
 	
 	public UDPClient(int port)
 			throws UnknownHostException {
 		this();
-		this.source_port = port; //this port is only used for receive
+		this.listenPort = port; 
 	}
 	
 	public UDPClient() throws UnknownHostException {
@@ -51,7 +49,7 @@ public class UDPClient {
 
 	public void createSocket() throws SocketException {
 		if (this.socket == null) {
-			this.socket = new DatagramSocket(this.source_port);
+			this.socket = new DatagramSocket(this.listenPort);
 			this.socket.setReuseAddress(true);
 		}
 	}
