@@ -4,28 +4,20 @@ import java.io.IOException;
 import java.util.List;
 
 public class Agent implements Runnable{
-	
-	// This port is used to resend the request to the node that is responsible 
-	protected int  sending_port = 7777; 
-	
-	// what does this decode key do?
-	protected String decodeKey;
-	
-	
+		
 	/* Ehsan Added this so not sure if Danny meant this: 
 	 * target Holds the information regarding the responsible node for a specified key. 
 	 * That is the node target has the value for the key requested.
 	 * */
 	protected NodeInfo target;
 	protected Datastore db;
-	protected Protocol protocol;
+	protected Packet packet;
 	protected UDPClient client;
 	
-	public Agent(Protocol p) throws IOException {
-		this.protocol = p;
-		this.decodeKey = StringUtils.byteArrayToHexString(p.getRawHeader("key"));
+	public Agent(Packet p) throws IOException {
+		this.packet = p;
 		this.db = Datastore.getInstance();
-		target = getResponsibleNode(p.getRawHeader("key"));
+		target = getResponsibleNode(p.getHeader("key"));
 		this.client = new UDPClient();
 	}
 	
@@ -52,23 +44,23 @@ public class Agent implements Runnable{
 		
 	}
 	
-	public static void respond(int responseCode, Protocol p) {
+	/*public static void respond(int responseCode, Packet p) {
 		try {
 			UDPClient c = new UDPClient();
 			byte[] value = new byte[0];
-			if(responseCode == 0 && p.getHeaderCode("command") == 2) {				
-				value = p.getRawHeader("value");
+			if(responseCode == 0 && p.getHeader("command")[0] == 2) {				
+				value = p.getHeader("value");
 				System.out.println("Sending value "+value.length);
 			}
 			Protocol res = new ResponseData(p.getHeader().clone(), responseCode, value);
 			System.out.println("Sending response...");
-			c.send(p.getHeader().getIP().getHostAddress(), 
+			c.send(p.getHeader().getIP(), 
 								p.getHeader().getPort(), res);
 			c.closeSocket();
 		} catch (Exception ex) {
 			System.out.println(ex.getMessage());
 			//TODO : send to monitor server;
 		} 
-	}
+	}*/
 	
 }

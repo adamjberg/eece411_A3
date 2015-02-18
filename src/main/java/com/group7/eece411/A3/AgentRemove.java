@@ -4,31 +4,36 @@ import java.io.IOException;
 
 public class AgentRemove extends Agent {
 
-	public AgentRemove(Protocol p) throws IOException {
+	public AgentRemove(Packet p) throws IOException {
 		super(p);
 	}
 
 	@Override
 	public void run() {
-		System.out.println("REMOVE key("+this.decodeKey+") from "+target.getHost());
+		System.out.println("REMOVE key("+this.packet.getStringHeader("key")+") from "+target.getHost());
 		try {
 			if(db.isThisNode(target)) {
-				if(target.get(decodeKey) != null) {
-					target.remove(this.decodeKey);
-					System.out.println("REMOVED "+this.decodeKey);
-					respond(0, this.protocol);	
+				if(target.get(this.packet.getStringHeader("key")) != null) {
+					target.remove(this.packet.getStringHeader("key"));
+					System.out.println("REMOVED "+this.packet.getStringHeader("key"));
+					this.client.send(Protocol.sendResponse(this.packet, null, 0));
 				} else {
-					respond(1, this.protocol);	
+					this.client.send(Protocol.sendResponse(this.packet, null, 1));
 				}
 			} else {
 				// send remote request
-				//UDPClient local_client = new UDPClient(sending_port, protocol);
-				this.client.send(target.getHost(), target.getPort(), protocol);
-				this.client.closeSocket();
+				this.client.send(packet);
 			}
 		} catch(Exception e) {
 			System.out.println(e.getMessage());
-			respond(4, this.protocol);	
+			try {
+				this.client.send(Protocol.sendResponse(this.packet, null, 4));
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}	
+		} finally {
+			this.client.closeSocket();
 		}
 	}
 

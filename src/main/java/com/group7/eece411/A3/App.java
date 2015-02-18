@@ -23,15 +23,14 @@ public class App {
 
 	public App() throws IOException {
 		this.db = Datastore.getInstance();
-		Protocol res = new RequestData();
 		thisNode = this.db.findThisNode();
-		this.client = new UDPClient(thisNode.getPort(), res);
+		this.client = new UDPClient(thisNode.getPort());
 		this.client.setTimeout(0);
 		this.client.createSocket();
 	}
 
 	public void run() throws SocketException, IOException, NotFoundCmdException {
-		Protocol p = null;
+		Packet p = null;
 		do {
 			try{
 				//comment out temporary for testing
@@ -39,10 +38,7 @@ public class App {
 				createAgent(p);
 				p = null;
 				//testCase();
-			} catch(NotFoundCmdException ex) {
-				System.out.println("NotFoundCmdException thrown");
-    			System.out.println(ex.getMessage());
-    		} catch(Exception e) {
+			}  catch(Exception e) {
     			System.out.println(e.getMessage());
 				System.out.println("Exception thrown");
     		}
@@ -53,9 +49,9 @@ public class App {
 		} while (true);
 	}
 	
-	private void createAgent(Protocol p) throws IOException {
-		System.out.println("Creating agent...");
-		switch (p.getHeaderCode("command")) {
+	private void createAgent(Packet p) throws IOException {
+		System.out.println("Creating agent..."+p.getHeader("command")[0]);
+		switch (p.getHeader("command")[0]) {
 			case 1: 
 				(new Thread(new AgentPut(p))).start();
 				break;
@@ -68,14 +64,14 @@ public class App {
 			case 4: 
 				break;
 			default:
-				Agent.respond(5, p);
+				this.client.send(Protocol.sendResponse(p, null, 5));
 				break;
 		}
 	}
 	/*
 	 * This is a test method 
 	 */
-	private void testCase() throws NotFoundCmdException, IOException {
+	/*private void testCase() throws NotFoundCmdException, IOException {
 		createAgent(new RequestData(1, "deadbeef", new byte[]{2}, 7777)); //put("deadbeef", x02);
 		createAgent(new RequestData(2, "deadbeef", new byte[]{}, 7777)); //get("deadbeef");
 		createAgent(new RequestData(1, "deadbeef22", new byte[]{1,2,3}, 7777)); //put("deadbeef22", x01,x02,x03);
@@ -90,12 +86,5 @@ public class App {
 		createAgent(new RequestData(3, "deadbeef22", new byte[]{}, 7777)); //remove("deadbeef22");
 		createAgent(new RequestData(2, "deadbeef22", new byte[]{}, 7777)); //get("deadbeef22");
 		while(true);
-	}
-	/*
-	 * This just passes the request on to the appropriate node
-	 */
-	private void forwardRequestTo(RequestData req, NodeInfo destNode) throws IllegalArgumentException, IOException
-	{
-		client.send(destNode.getHost(), destNode.getPort(), req);
-	}
+	}*/
 }

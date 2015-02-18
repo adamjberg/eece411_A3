@@ -4,7 +4,7 @@ import java.io.IOException;
 
 public class AgentGet extends Agent {
 	
-	public AgentGet(Protocol p) throws IOException {
+	public AgentGet(Packet p) throws IOException {
 		super(p);
 	}
 
@@ -14,26 +14,28 @@ public class AgentGet extends Agent {
 		byte[] value = null;
 		try {
 			if(db.isThisNode(target)) {
-				value = target.get(decodeKey);			
+				value = target.get(this.packet.getStringHeader("key"));			
 				if(value == null) {
-					System.out.println("Cannot GET the value, key : "+decodeKey);
-					respond(1, this.protocol);
+					System.out.println("Cannot GET the value, key : "+this.packet.getStringHeader("key"));
+					this.client.send(Protocol.sendResponse(this.packet, null, 1));
 				} else {
-					System.out.println("Value GET from key : "+decodeKey + " is " +StringUtils.byteArrayToHexString(value));
-					this.protocol.set("value", target.get(decodeKey));
-					respond(0, this.protocol);
+					System.out.println("Value GET from key : "+this.packet.getStringHeader("key") + " is " +StringUtils.byteArrayToHexString(value));
+					this.client.send(Protocol.sendResponse(this.packet, 
+							target.get(this.packet.getStringHeader("key")), 0));
 				}
 			} else {
-				// send request to remote node
-				// sending_port is 7777 now -> not sure if itz the right port
-				//UDPClient local_client = new UDPClient(sending_port, protocol);
-				this.client.send(target.getHost(), target.getPort(), protocol);
-				this.client.closeSocket();				
+				this.client.send(packet);	
 			}
 		} catch(Exception e) {
 			System.out.println(e.getMessage());
-			respond(4, this.protocol);			
-			
+			try {
+				this.client.send(Protocol.sendResponse(this.packet, null, 4));
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}					
+		} finally {
+			this.client.closeSocket();
 		}
 	}
 	

@@ -3,90 +3,84 @@ package com.group7.eece411.A3;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Header {
 	public static final int LENGTH_IN_BYTES = 16;
 	
-	private InetAddress source;
-	private int port;
-	private short randomNum;
-	private long timestamp;
 	private byte[] uniqueId;
+	private int length;
+	private ConcurrentHashMap<String, String> fields;
+	private ConcurrentHashMap<String, byte[]> rawFields;
+	private ArrayList<String> order;
 	
-	public Header(InetAddress s, int p) {
-		source = s;
-		port = p;
+	public Header() {
+		fields = new ConcurrentHashMap<String, String>();
+		rawFields = new ConcurrentHashMap<String, byte[]>();
+		order = new ArrayList<String>();
+		this.length = 0;
 	}
 	
-	public Header(int port) throws UnknownHostException {
-		this.source = InetAddress.getByName(InetAddress.getLocalHost().getHostAddress());
-		this.port = port;
-		this.uniqueId = generateUniqueID();
+	public void setUniqueId(byte[] uid) {
+		this.uniqueId = uid;
 	}
 	
-	public Header(byte[] uniqueId) throws UnknownHostException {
-		this.uniqueId = uniqueId;
-		decode(uniqueId);
+	public void setField(String fieldName, byte[] value) {
+		if(this.rawFields.get(fieldName) == null) {
+			order.add(fieldName);			
+		} else {
+			this.length -= this.rawFields.get(fieldName).length;
+		}
+		this.rawFields.put(fieldName, value);
+		this.length += this.rawFields.get(fieldName).length;
+		this.fields.put(fieldName, StringUtils.byteArrayToHexString(value));
+	}
+		
+	public void setField(String fieldName, String value) {
+		if(this.rawFields.get(fieldName) == null) {
+			order.add(fieldName);			
+		} else {
+			this.length -= this.rawFields.get(fieldName).length;
+		}
+		this.rawFields.put(fieldName, StringUtils.hexStringToByteArray(value));
+		this.length += this.rawFields.get(fieldName).length;
+		this.fields.put(fieldName, value);
 	}
 	
+	public String getHeaderValue(String fieldName) {
+		return this.fields.get(fieldName);
+	}
+	
+	public byte[] getRawHeaderValue(String fieldName) {
+		return this.rawFields.get(fieldName);
+	}
+	
+	public byte[] getBytes() {
+		ByteBuffer byteBuffer = ByteBuffer.allocate(this.length).order(java.nio.ByteOrder.LITTLE_ENDIAN);
+		for(int i = 0; i < this.order.size(); i++) {
+			byteBuffer.put(this.rawFields.get(this.order.get(i)));
+		}
+		return byteBuffer.array();
+	}
+	
+	public int size() {
+		return this.length;
+	}
 	public Header clone() {
-		Header result = new Header(this.getIP(), this.getPort());
-		result.uniqueId = this.getUniqueId();
-		result.timestamp = this.getTimestamp();
+		Header result = new Header();
+		result.fields = new ConcurrentHashMap<String, String>(this.fields);
+		result.rawFields = new ConcurrentHashMap<String, byte[]>(this.rawFields);
+		result.length = this.length;
+		result.order = new ArrayList<String>(this.order);
+		result.uniqueId = Arrays.copyOfRange(this.uniqueId, 0, this.uniqueId.length);
 		return result;
 	}
 	
 	public byte[] getUniqueId() {
 		return this.uniqueId;
-	}
-	public byte[] generateUniqueID() {
-		timestamp = System.currentTimeMillis();
-		Random r = new Random(timestamp);
-		randomNum = (short) r.nextInt();
-		
-		ByteBuffer resultBuffer = ByteBuffer.allocate(16).order(java.nio.ByteOrder.LITTLE_ENDIAN)
-					.put(source.getAddress())
-					.putShort((short)this.port)
-					.put(new byte[2])
-					.putLong(timestamp);
-		this.uniqueId = resultBuffer.array();
-		return this.uniqueId;
-	}
-	
-	public void decode(byte[] message) throws UnknownHostException {
-		ByteBuffer msgBuffer = ByteBuffer.wrap(message).order(java.nio.ByteOrder.LITTLE_ENDIAN);
-		
-		// Decode first 4 bytes into byte array which gets converted into InetAddress
-		byte[] ip = new byte[4];
-		msgBuffer.get(ip, 0, 4);
-		source = InetAddress.getByAddress(ip);
-		
-		// Get Short (2 bytes) into port
-		port = msgBuffer.getShort();
-		randomNum = msgBuffer.getShort();
-		
-		// Get timestamp
-		timestamp = msgBuffer.getLong();
-	}
-	
-	public byte[] decodeAndGetMessage(byte[] message) throws UnknownHostException {
-		byte[] actualMessage = Arrays.copyOfRange(message, 16, message.length);
-		decode(message);
-		return actualMessage;
-	}
-	
-	public InetAddress getIP() {
-		return source;
-	}
-	
-	public int getPort() {
-		return port;
-	}
-	
-	public long getTimestamp() {
-		return timestamp;
 	}
 	
 	@Override
@@ -94,10 +88,18 @@ public class Header {
 		boolean result = false;
 		if (other instanceof Header) {
 			Header that = (Header) other;
-			result = this.source == that.source
-					&& this.port == that.port
-					&& this.randomNum == that.randomNum
-					&& this.timestamp == that.timestamp;
+			for(int i = 0; i < this.order.size(); i++) {
+				if(!this.fields.get(this.order.get(i)).equals(that.fields.get(that.order.get(i)))) {
+					return false;
+				}
+			}
+			
+			for(int i = 0; i < this.uniqueId.length; i++) {
+				if(this.uniqueId[i] != that.uniqueId[i]) {
+					return false;
+				}
+			}
+			return that.length == this.length && this.uniqueId.length == that.uniqueId.length;
 		}
 		return result;
 	}

@@ -4,7 +4,7 @@ import java.io.IOException;
 
 public class AgentPut extends Agent {
 
-	public AgentPut(Protocol p) throws IOException {
+	public AgentPut(Packet p) throws IOException {
 		super(p);
 	}
 
@@ -13,23 +13,28 @@ public class AgentPut extends Agent {
 		System.out.println("PUT some value to "+target.getHost() +"...");
 		try {
 			if(db.isThisNode(target)) {
-				if(!target.put(this.decodeKey, this.protocol.getRawHeader("value"))) {
-					respond(2, this.protocol);	
+				if(!target.put(this.packet.getStringHeader("key"), this.packet.getPayload())) {
+					this.client.send(Protocol.sendResponse(this.packet, null, 2));
 				} else {
-					System.out.println("PUT key : "+this.decodeKey+
-							", value : "+StringUtils.byteArrayToHexString(this.protocol.getRawHeader("value")) + 
+					System.out.println("PUT key : "+this.packet.getStringHeader("key")+
+							", value : "+StringUtils.byteArrayToHexString(this.packet.getPayload()) + 
 							" in "+target.getHost());
-					respond(0, this.protocol);	
+					this.client.send(Protocol.sendResponse(this.packet, null, 0));
+					
 				}
 			} else {
-				//send request to remote key
-				//UDPClient local_client = new UDPClient(sending_port, protocol);
-				this.client.send(target.getHost(), target.getPort(), protocol);
-				this.client.closeSocket();
+				this.client.send(packet);
 			}
 		} catch(Exception e) {
 			System.out.println(e.getMessage());
-			respond(4, this.protocol);	
+			try {
+				this.client.send(Protocol.sendResponse(this.packet, null, 4));
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}	
+		} finally {
+			this.client.closeSocket();
 		}
 	}
 

@@ -19,13 +19,11 @@ public class UDPClient {
 	private int source_port;
 	private int timeout;
 	private DatagramSocket socket;
-	private Protocol res_protocol;
 	
-	public UDPClient(int port, Protocol res_protocol)
+	public UDPClient(int port)
 			throws UnknownHostException {
 		this();
 		this.source_port = port; //this port is only used for receive
-		this.res_protocol = res_protocol;
 	}
 	
 	public UDPClient() throws UnknownHostException {
@@ -64,27 +62,20 @@ public class UDPClient {
 		}
 	}
 
-	public void send(String host, int port, Protocol msg)
-			throws IllegalArgumentException, IOException {
-		this.send(host, port, msg.toBytes(), msg.getUniqueId());
-	}
-
-	public void send(String host, int port, byte[] bytesToSend, byte[] uniqueId)
-			throws IllegalArgumentException, IOException {
-		System.out.println("Sending to "+host+":"+port);
-		if (host == null || host.isEmpty() || bytesToSend == null) {
+	public void send(Packet p) throws IOException {
+		if (p == null) {
 			throw new IllegalArgumentException();
 		}
+		System.out.println("Sending to "+p.getSourceIp()+":"+p.getSourcePort());
 		this.createSocket();
-		byte[] request = constructByteRequest(uniqueId, bytesToSend);
-		DatagramPacket packet = new DatagramPacket(request, request.length,
-				InetAddress.getByName(host), Integer.valueOf(port));
+		byte[] request = p.getBytes();
 		System.out.println("message going to be sent has size of "+request.length+" with response/command code : "+request[16]);
+		DatagramPacket packet = new DatagramPacket(request, request.length,
+				InetAddress.getByName(p.getSourceIp()), Integer.valueOf(p.getSourcePort()));
 		socket.send(packet);
 	}
-
-	public Protocol receive() throws SocketException, IOException,
-			NotFoundCmdException {
+	
+	public Packet receive() throws IOException {
 		this.createSocket();
 		byte buffer[] = new byte[16384];
 		DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
@@ -92,16 +83,7 @@ public class UDPClient {
 		socket.receive(packet);
 		System.out.println("*************************************************");
 		System.out.println("Receive packet length : "+packet.getLength());
-		return this.res_protocol.fromBytes(Arrays.copyOfRange(buffer, 0,
-				packet.getLength()));
+		return Protocol.receiveRequest(Arrays.copyOfRange(buffer, 0, packet.getLength()));
 	}
 
-	private byte[] constructByteRequest(byte[] uniqueId, byte[] dataBytes) {
-		byte[] result;
-		result = new byte[uniqueId.length + dataBytes.length];
-		System.arraycopy(uniqueId, 0, result, 0, uniqueId.length);
-		System.arraycopy(dataBytes, 0, result, uniqueId.length,
-				dataBytes.length);
-		return result;
-	}
 }
