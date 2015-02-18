@@ -12,12 +12,14 @@ public class Agent implements Runnable{
 	protected NodeInfo target;
 	protected Datastore db;
 	protected Protocol protocol;
+	protected UDPClient client;
 	
 	public Agent(Protocol p) throws IOException {
 		this.protocol = p;
 		this.decodeKey = StringUtils.byteArrayToHexString(p.getRawHeader("key"));
 		this.db = Datastore.getInstance();
 		target = getResponsibleNode(p.getRawHeader("key"));
+		this.client = new UDPClient();
 	}
 	
 	/*

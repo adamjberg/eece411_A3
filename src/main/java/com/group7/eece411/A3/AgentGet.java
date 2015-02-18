@@ -25,6 +25,10 @@ public class AgentGet extends Agent {
 			if(value == null) {
 				//TODO : 0x01.  Non-existent key requested in a get or delete operation
 				System.out.println("Cannot GET the value, key : "+decodeKey);
+				Protocol res = new ResponseData(protocol.getHeader().clone(), 1, new byte[]{});
+				this.client.send(protocol.getHeader().getIP().getHostAddress(), 
+									protocol.getHeader().getPort(), res);
+				this.client.closeSocket();
 			} else {
 				System.out.println("Value GET from key : "+decodeKey + " is " +StringUtils.byteArrayToHexString(value));
 			}

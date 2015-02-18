@@ -23,11 +23,15 @@ public class UDPClient {
 	
 	public UDPClient(int port, Protocol res_protocol)
 			throws UnknownHostException {
+		this();
+		this.source_port = port; //this port is only used for receive
+		this.res_protocol = res_protocol;
+	}
+	
+	public UDPClient() throws UnknownHostException {
 		this.source = InetAddress.getByName(InetAddress.getLocalHost()
 				.getHostAddress());
-		this.source_port = port;
 		this.setTimeout(100);
-		this.res_protocol = res_protocol;
 	}
 
 	public void setTimeout(int millseconds) {
@@ -74,6 +78,7 @@ public class UDPClient {
 		byte[] request = constructByteRequest(uniqueId, bytesToSend);
 		DatagramPacket packet = new DatagramPacket(request, request.length,
 				InetAddress.getByName(host), Integer.valueOf(port));
+		System.out.println("message going to be sent has size of "+request.length);
 		socket.send(packet);
 	}
 

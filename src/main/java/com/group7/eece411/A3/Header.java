@@ -31,6 +31,14 @@ public class Header {
 		//TODO : decode uniqueId and set timestamp, source, and port
 	}
 	
+	public Header clone() {
+		Header result = new Header(this.getUniqueId());
+		result.port = this.getPort();
+		result.source = this.getIP();
+		result.timestamp = this.getTimestamp();
+		return result;
+	}
+	
 	public byte[] getUniqueId() {
 		return this.uniqueId;
 	}

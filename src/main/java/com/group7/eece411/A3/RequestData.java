@@ -112,8 +112,7 @@ public class RequestData extends Protocol {
 	
 	private int getMessageSizeInBytes() {
 		if (value.length() > 0) {
-			return MIN_MESSAGE_SIZE + VALUE_LENGTH_SIZE_IN_BYTES
-					+ value.length();
+			return MIN_MESSAGE_SIZE + HMdata.get("value").length;
 		} else {
 			return MIN_MESSAGE_SIZE;
 		}
@@ -122,5 +121,10 @@ public class RequestData extends Protocol {
 	@Override
 	public byte[] getUniqueId() {
 		return this.header.getUniqueId();
+	}
+	
+	@Override
+	public Header getHeader() {
+		return this.header;
 	}
 }

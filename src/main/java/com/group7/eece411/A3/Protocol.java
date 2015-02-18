@@ -17,4 +17,5 @@ public abstract class Protocol {
 	public abstract Integer getHeaderCode(String Head);
 	public abstract byte[] getRawHeader(String Head);
 	public abstract byte[] getUniqueId();
+	public abstract Header getHeader();
 }
