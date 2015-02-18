@@ -1,6 +1,7 @@
 package com.group7.eece411.A3;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 /*
  * A Packet class is an abstraction of formating bytes.  This class contains
@@ -64,5 +65,9 @@ public class Packet {
 	
 	public byte[] getUID() {
 		return this.header.getUniqueId();
+	}
+	
+	public Packet clone() {
+		return new Packet(this.header.clone(), Arrays.copyOfRange(this.payload, 0, this.payload.length));
 	}
 }

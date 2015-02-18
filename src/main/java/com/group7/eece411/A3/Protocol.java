@@ -3,6 +3,10 @@
  */
 package com.group7.eece411.A3;
 
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 /**
@@ -38,6 +42,9 @@ public class Protocol {
 	 */
 	public static Packet receiveResponse(byte[] packet, Packet req) {
 		//TODO : check uniqueId etc.
+		if(Arrays.equals(Arrays.copyOfRange(packet, 0, 16), req.getUID())) {
+			
+		}
 		return null;
 	}
 	
@@ -46,6 +53,17 @@ public class Protocol {
 	 */
 	public static Packet sendRequest() {
 		return null;
+	}
+	
+	/*
+	 * Create request packet to forward
+	 */
+	public static Packet forwardRequest(Packet packet) throws UnknownHostException, IOException {
+		Packet clone = packet.clone();
+		byte[] uniqueId = generateUniqueID();
+		decodeUniqueId(uniqueId, clone.getHeader());
+		clone.getHeader().setField("sourceIP", Arrays.copyOfRange(uniqueId, 0, 4));
+		return clone;
 	}
 	
 	/*
@@ -95,5 +113,14 @@ public class Protocol {
 		h.setField("port", Arrays.copyOfRange(uniqueId, 4, 6));
 		h.setField("random", Arrays.copyOfRange(uniqueId, 6, 8));
 		h.setField("timestamp", Arrays.copyOfRange(uniqueId, 8, 16));
+	}
+	
+	public static byte[] generateUniqueID() throws UnknownHostException, IOException {
+		ByteBuffer resultBuffer = ByteBuffer.allocate(16).order(java.nio.ByteOrder.LITTLE_ENDIAN)
+				.put(InetAddress.getLocalHost().getAddress())
+				.putShort((short)Datastore.getInstance().findThisNode().getPort())
+				.put(new byte[2])
+				.putLong(System.currentTimeMillis());
+		return resultBuffer.array();
 	}
 }
