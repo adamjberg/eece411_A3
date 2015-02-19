@@ -12,10 +12,13 @@ public class Packet {
 
 	private Header header;
 	private byte[] payload;
+	private String sourceIP;
+	private int sourcePort;
 	
 	public Packet(Header h) {
 		this.header = h;
 		this.payload = new byte[0];
+		this.sourcePort = 0;
 	}
 	
 	public Packet(Header h, byte[] payload) {
@@ -51,16 +54,30 @@ public class Packet {
 		return byteBuffer.array();
 	}
 	
+	public void setSourceIP(String ip) {
+		this.sourceIP = ip;
+	}
+	
+	public void setSourcePort(int port) {
+		this.sourcePort = port;
+	}
+	
 	public String getSourceIp() {
-		byte[] ip = this.header.getRawHeaderValue("sourceIP");
-		return ByteOrder.ubyte2int(ip[0])+"."+
-				ByteOrder.ubyte2int(ip[1])+"."+
-				ByteOrder.ubyte2int(ip[2])+"."+
-				ByteOrder.ubyte2int(ip[3]);
+		if(this.sourceIP == null) {
+			byte[] ip = this.header.getRawHeaderValue("sourceIP");
+			this.sourceIP = ByteOrder.ubyte2int(ip[0])+"."+
+					ByteOrder.ubyte2int(ip[1])+"."+
+					ByteOrder.ubyte2int(ip[2])+"."+
+					ByteOrder.ubyte2int(ip[3]);
+		}
+		return this.sourceIP;
 	}
 	
 	public int getSourcePort() {
-		return ByteOrder.leb2int(this.header.getRawHeaderValue("port"), 0, 2);
+		if(this.sourcePort == 0) {
+			this.sourcePort = ByteOrder.leb2int(this.header.getRawHeaderValue("port"), 0, 2);
+		}
+		return this.sourcePort;
 	}
 	
 	public byte[] getUID() {
@@ -68,6 +85,11 @@ public class Packet {
 	}
 	
 	public Packet clone() {
-		return new Packet(this.header.clone(), Arrays.copyOfRange(this.payload, 0, this.payload.length));
+		Packet p = new Packet(this.header.clone(), Arrays.copyOfRange(this.payload, 0, this.payload.length));
+		p.setSourceIP(this.sourceIP);
+		p.setSourcePort(this.sourcePort);
+		return p;
 	}
+	
+	
 }

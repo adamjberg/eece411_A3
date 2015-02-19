@@ -87,8 +87,8 @@ public class UDPClient {
 		socket.setSoTimeout(this.timeout);
 		socket.receive(packet);
 		System.out.println("*************************************************");
-		System.out.println("Receive packet length : "+packet.getLength());
-		return Protocol.receiveRequest(Arrays.copyOfRange(buffer, 0, packet.getLength()));
+		System.out.println("Receive packet length : "+packet.getLength() +" from "+packet.getAddress().getHostAddress() +" : "+packet.getPort());
+		return Protocol.receiveRequest(Arrays.copyOfRange(buffer, 0, packet.getLength()), packet.getAddress().getHostAddress(), packet.getPort());
 	}
 
 }

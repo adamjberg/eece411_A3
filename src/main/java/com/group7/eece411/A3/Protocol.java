@@ -33,7 +33,10 @@ public class Protocol {
 		if(responseCode == 0 && value != null && value.length > 0 && value.length <= MAX_VALUE_LENGTH) {			;
 			h.setField("value-length", ByteOrder.int2leb(value.length));
 		}
-		return new Packet(h, value);
+		Packet p = new Packet(h, value);
+		p.setSourceIP(req.getSourceIp());
+		p.setSourcePort(req.getSourcePort());
+		return p;
 	}
 	
 	/*
@@ -69,7 +72,7 @@ public class Protocol {
 	/*
 	 * Create request packet from bytes we received.  We are receiving a request.
 	 */
-	public static Packet receiveRequest(byte[] packet) {
+	public static Packet receiveRequest(byte[] packet, String sourceIP, int sourcePort) {
 		Packet p = null;
 		Header header = new Header();
 		decodeUniqueId(Arrays.copyOfRange(packet, 0, 16), header);
@@ -101,6 +104,8 @@ public class Protocol {
 			System.out.println("command : "+header.getRawHeaderValue("command")[0]);
 			System.out.println("key : "+header.getHeaderValue("key"));				
 		}
+		p.setSourceIP(sourceIP);
+		p.setSourcePort(sourcePort);
 		return p;
 	}
 	
