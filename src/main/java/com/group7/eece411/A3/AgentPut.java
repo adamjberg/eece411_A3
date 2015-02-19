@@ -10,7 +10,7 @@ public class AgentPut extends Agent {
 
 	@Override
 	public void run() {
-		System.out.println("PUT some value to "+target.getHost() +"...");
+		System.out.println("Try to PUT (key,value) to "+target.getHost() +"...");
 		try {
 			if(db.isThisNode(target)) {
 				if(!target.put(this.packet.getStringHeader("key"), this.packet.getPayload())) {
@@ -23,6 +23,7 @@ public class AgentPut extends Agent {
 					
 				}
 			} else {
+				System.out.println("Forwarding to "+target.getHost());
 				this.client.send(target.getHost(), target.getPort(), packet);	
 			}
 		} catch(Exception e) {

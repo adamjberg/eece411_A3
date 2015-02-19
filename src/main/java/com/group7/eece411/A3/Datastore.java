@@ -85,6 +85,7 @@ public class Datastore {
 				 * I would suggest we do not go that way.
 				 */
 				if (self == null && isNodeInfoMine(n)) {
+					System.out.println("Start machine : "+n.getHost()+" with location "+n.getLocation());
 					this.self = n.getLocation();
 				} 
 				if (n.getLocation() < CIRCLE_SIZE && n.getLocation() >= 0) {

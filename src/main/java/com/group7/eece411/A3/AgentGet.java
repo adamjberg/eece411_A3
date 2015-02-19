@@ -10,7 +10,7 @@ public class AgentGet extends Agent {
 
 	@Override
 	public void run() {		
-		System.out.println("GET a value from "+target.getHost() +"...");
+		System.out.println("Try to GET a value from "+target.getHost() +"...");
 		byte[] value = null;
 		try {
 			if(db.isThisNode(target)) {
@@ -24,6 +24,7 @@ public class AgentGet extends Agent {
 							target.get(this.packet.getStringHeader("key")), 0));
 				}
 			} else {
+				System.out.println("Forwarding to "+target.getHost());
 				this.client.send(target.getHost(), target.getPort(), packet);	
 			}
 		} catch(Exception e) {

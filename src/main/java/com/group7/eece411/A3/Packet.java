@@ -86,8 +86,8 @@ public class Packet {
 	
 	public Packet clone() {
 		Packet p = new Packet(this.header.clone(), Arrays.copyOfRange(this.payload, 0, this.payload.length));
-		p.setSourceIP(this.sourceIP);
-		p.setSourcePort(this.sourcePort);
+		p.setSourceIP(this.getSourceIp());
+		p.setSourcePort(this.getSourcePort());
 		return p;
 	}
 	

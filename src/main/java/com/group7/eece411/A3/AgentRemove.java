@@ -10,7 +10,7 @@ public class AgentRemove extends Agent {
 
 	@Override
 	public void run() {
-		System.out.println("REMOVE key("+this.packet.getStringHeader("key")+") from "+target.getHost());
+		System.out.println("Try to REMOVE key("+this.packet.getStringHeader("key")+") from "+target.getHost());
 		try {
 			if(db.isThisNode(target)) {
 				if(target.get(this.packet.getStringHeader("key")) != null) {
@@ -22,6 +22,7 @@ public class AgentRemove extends Agent {
 				}
 			} else {
 				// send remote request
+				System.out.println("Forwarding to "+target.getHost());
 				this.client.send(target.getHost(), target.getPort(), packet);	
 			}
 		} catch(Exception e) {

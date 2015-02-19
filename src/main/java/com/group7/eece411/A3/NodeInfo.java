@@ -27,11 +27,11 @@ public class NodeInfo {
 	}
 	
 	public boolean put(String key, byte[] value) {
-		if(this.kvStore.size() >= SPACESIZE) {
+		if(this.kvStore.size() >= SPACESIZE || spaceAvailable - value.length < 0) {
 			return false;
 		}
-		if(spaceAvailable - value.length < 0) {
-			return false;
+		if(this.kvStore.get(key) != null) {
+			spaceAvailable += this.kvStore.get(key).length;
 		}
 		spaceAvailable -= value.length;
 		this.kvStore.put(key, value);

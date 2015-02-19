@@ -42,7 +42,6 @@ public class App {
 	}
 	
 	private void router(Packet p) throws IOException {
-		System.out.println("Routing...");
 		switch (p.getHeader("command")[0]) {
 			case 1: 
 				(new AgentPut(p)).run();

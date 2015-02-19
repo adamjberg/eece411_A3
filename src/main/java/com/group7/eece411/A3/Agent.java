@@ -25,7 +25,6 @@ public class Agent implements Runnable{
 	 * Get the node that responsible for the key, it can be the caller node or other remote nodes
 	 */
 	private NodeInfo getResponsibleNode(byte[] key) {
-		System.out.println("Finding node...");
 		List<Integer> allLocations = db.findAllLocations();
 		Integer closestLocation = null;
 		for(Integer loc : allLocations) {
@@ -37,6 +36,7 @@ public class Agent implements Runnable{
 			//for key[0] between 0 and the location of first node
 			closestLocation = allLocations.get(allLocations.size()-1);
 		}
+		System.out.println("Find closest node at location : "+closestLocation);
 		return db.find(closestLocation);
 	}
 		
