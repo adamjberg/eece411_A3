@@ -1,3 +1,1 @@
-planetlab1.cs.ubc.ca:7777:100
-planetlab2.cs.ucla.edu:7788:185
-planetlab2.ucsd.edu:8877:15
+127.0.0.1:7777:100

@@ -8,11 +8,16 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.christianschenk.simplecache.SimpleCache;
 
 /**
  * Ehsan Added this so it might not be complete: 
@@ -22,25 +27,54 @@ import java.util.concurrent.ConcurrentHashMap;
  * */
 public class Datastore {
 	public static int CIRCLE_SIZE = 256;
+	public static final long TIMEOUT = 5;
 
 	private static Datastore instance = null;
 	private ConcurrentHashMap<Integer, NodeInfo> successors;
 	private Integer self;
+	private ArrayList<Packet> packetQueue;
+	private SimpleCache<Packet> cache;
+	private ArrayList<String> logs;
 
-	private Datastore() throws IOException {
+	private Datastore() {
 		this.successors = new ConcurrentHashMap<Integer, NodeInfo>();
+		this.packetQueue = new ArrayList<Packet>();
+		this.logs = new ArrayList<String>();
+		this.cache = new SimpleCache<Packet>(TIMEOUT);
 		setupNodes();
 	}
 
 	// Why do we need this ? 
 	// FYI: Please refer to this: http://en.wikipedia.org/wiki/Singleton_pattern
-	public static Datastore getInstance() throws IOException {
+	public static Datastore getInstance() {
 		if (instance == null) {
 			instance = new Datastore();
 		}
 		return instance;
 	}
 
+	public void queue(Packet p) {
+		synchronized(this.packetQueue) {
+			this.packetQueue.add(p);
+		}
+	}
+	
+	public List<Packet> poll() {
+		ArrayList<Packet> clone = new ArrayList<Packet>();
+		synchronized(this.packetQueue) {
+			for(Packet p : this.packetQueue) {
+				clone.add(p);
+			}
+			this.packetQueue.clear();
+		}
+		Collections.sort(clone, new Comparator<Packet>() {
+			public int compare(Packet p1, Packet p2) {
+		        return p1.getDate().compareTo(p2.getDate());
+		    }
+		});
+		return clone;
+	}
+	
 	// What does this location mean ?
 	public NodeInfo find(int location) {
 		return this.successors.get(location);
@@ -61,37 +95,45 @@ public class Datastore {
 		return this.successors.get(this.self);
 	}
 
-	private void setupNodes() throws IOException {
+	private void setupNodes() {
 		InputStream in = Datastore.class.getClassLoader().getResourceAsStream(
 				"file/hosts.txt");
 		BufferedReader reader = new BufferedReader(new InputStreamReader(in));
 		String line = null;
-		while ((line = reader.readLine()) != null) {
-			String[] lineArray = line.split(":");
-			if (lineArray.length != 3) {
-				System.out.println("Invalid Line Found!");
-			} else {
-				NodeInfo n = new NodeInfo(lineArray[0],
-						Integer.valueOf(lineArray[1]),
-						Integer.valueOf(lineArray[2]));
+		try {
+			while ((line = reader.readLine()) != null) {
+				String[] lineArray = line.split(":");
+				if (lineArray.length != 3) {
+					System.out.println("Invalid Line Found!");
+				} else {
+					NodeInfo n = new NodeInfo(lineArray[0],
+							Integer.valueOf(lineArray[1]),
+							Integer.valueOf(lineArray[2]));
 
-				/*
-				 * Find the first NodeInfo that matches my system. There may be
-				 * multiple that match because we may want to run multiple
-				 * services on the same machine i.e. testing
-				 */
-				/*
-				 * Idea of testing with multiple threads can become very complex,
-				 * I would suggest we do not go that way.
-				 */
-				if (self == null && isNodeInfoMine(n)) {
-					System.out.println("Start machine : "+n.getHost()+" with location "+n.getLocation());
-					this.self = n.getLocation();
-				} 
-				if (n.getLocation() < CIRCLE_SIZE && n.getLocation() >= 0) {
-					this.successors.put(n.getLocation(), n);
+					/*
+					 * Find the first NodeInfo that matches my system. There may be
+					 * multiple that match because we may want to run multiple
+					 * services on the same machine i.e. testing
+					 */
+					/*
+					 * Idea of testing with multiple threads can become very complex,
+					 * I would suggest we do not go that way.
+					 */
+					if (self == null && isNodeInfoMine(n)) {
+						System.out.println("Start machine : "+n.getHost()+" with location "+n.getLocation());
+						this.self = n.getLocation();
+					} 
+					if (n.getLocation() < CIRCLE_SIZE && n.getLocation() >= 0) {
+						this.successors.put(n.getLocation(), n);
+					}
 				}
 			}
+		} catch (NumberFormatException e) {
+			this.addLog("EXCEPTION", Arrays.toString(e.getStackTrace()));
+		} catch (UnknownHostException e) {
+			this.addLog("EXCEPTION", Arrays.toString(e.getStackTrace()));
+		} catch (IOException e) {
+			this.addLog("EXCEPTION", Arrays.toString(e.getStackTrace()));
 		}
 		//fillEmptyLocations();
 	}
@@ -166,5 +208,27 @@ public class Datastore {
 		List<Integer> list = new ArrayList<Integer>(c);
 		Collections.sort(list);
 		return list;
+	}
+
+	public Packet getCache(String uid) {
+		return this.cache.get(uid);
+	}
+
+	public void storeCache(String uid, Packet packet) {
+		this.cache.put(uid, packet);
 	}	
+	
+	public void addLog(String type, String log) {
+		String str = "{type:\""+type+"\","
+				+ "time:\""+(new Date()).toString()+"\","
+						+ "log:\""+log+"\"}";
+		this.logs.add(str);
+		System.out.println(str);
+	}
+	
+	public String getLogs() {
+		String str = this.logs.toString();
+		this.logs.clear();
+		return str;
+	}
 }

@@ -2,11 +2,17 @@ package com.group7.eece411.A3;
 
 import java.io.IOException;
 import java.net.SocketException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+
+import org.christianschenk.simplecache.SimpleCache;
 
 public class App {
-	private UDPClient client;
+	private UDPClient listener;
 	private Datastore db;
 	private NodeInfo thisNode;
+	private HashMap<String, Service> services;
 
 	public static void main(String[] args) throws Exception {
 		System.setProperty("java.net.preferIPv4Stack", "true");
@@ -17,46 +23,42 @@ public class App {
 			System.out.println(ex.toString());
 		} catch(Exception e) {
 			System.out.println(e.toString());
-			//TODO : send message to monitor server
 		}
 	}
 
+	//bootstrap
 	public App() throws IOException {
 		this.db = Datastore.getInstance();
 		thisNode = this.db.findThisNode();
-		this.client = new UDPClient(thisNode.getPort());
-		this.client.setTimeout(0);
-		this.client.createSocket();
+		this.listener = new UDPClient(thisNode.getPort());
+		this.listener.setTimeout(0);
+		this.listener.createSocket();
+		this.services = new HashMap<String, Service>();
+		this.services.put("monitor", (new MonitorService(30000)));
+		this.services.put("kvStore", (new KVService(100)));
 	}
 
-	public void run() throws IOException {
+	public void run() {
+		Iterator<Service> serviceIterator = this.services.values().iterator();
+		while(serviceIterator.hasNext()) {
+			serviceIterator.next().start();
+		}
+		
 		Packet p = null;
 		do {
 			try{
-				p = this.client.receive(); 
-				router(p);
+				p = this.listener.receive(); 
+				Packet cachePacket = this.db.getCache(p.getUIDString());
+				if( cachePacket == null) {
+					this.db.queue(p);
+				} else {
+					//respond cache 
+					this.db.addLog("DEBUG", cachePacket.getUIDString());
+				}
 			}  catch(Exception e) {
-    			System.out.println(e.toString());
+				Datastore.getInstance().addLog("EXCEPTION", Arrays.toString(e.getStackTrace()));	
     		}
 		} while (true);
-	}
+	}	
 	
-	private void router(Packet p) throws IOException {
-		switch (p.getHeader("command")[0]) {
-			case 1: 
-				(new AgentPut(p)).run();
-				break;
-			case 2: 
-				(new AgentGet(p)).run();
-				break;
-			case 3: 
-				(new AgentRemove(p)).run();
-				break;
-			case 4: 
-				break;
-			default:
-				this.client.send(Protocol.sendResponse(p, null, 5));
-				break;
-		}
-	}
 }

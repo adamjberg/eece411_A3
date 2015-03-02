@@ -72,7 +72,7 @@ public class Protocol {
 	/*
 	 * Create request packet from bytes we received.  We are receiving a request.
 	 */
-	public static Packet receiveRequest(byte[] packet) {
+	public static Packet receiveRequest(byte[] packet, String host, int port) {
 		Packet p = null;
 		Header header = new Header();
 		decodeUniqueId(Arrays.copyOfRange(packet, 0, 16), header);
@@ -102,8 +102,10 @@ public class Protocol {
 			}
 			
 			System.out.println("command : "+header.getRawHeaderValue("command")[0]);
-			System.out.println("key : "+header.getHeaderValue("key"));				
+			System.out.println("key : "+header.getHeaderValue("key"));	
 		}
+		p.setSourceIP(host);
+		p.setSourcePort(port);
 		return p;
 	}
 	

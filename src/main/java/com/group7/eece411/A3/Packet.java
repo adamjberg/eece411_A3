@@ -2,6 +2,8 @@ package com.group7.eece411.A3;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Date;
 
 /*
  * A Packet class is an abstraction of formating bytes.  This class contains
@@ -91,5 +93,20 @@ public class Packet {
 		return p;
 	}
 	
+	public Long getDate() {
+		ByteBuffer.allocate(8).order(java.nio.ByteOrder.LITTLE_ENDIAN);
+		ByteBuffer bb = ByteBuffer.wrap(this.header.getRawHeaderValue("timestamp"));
+		return bb.getLong();
+	}
 	
+	@Override
+	public String toString() {
+		return "{sourceIP:\""+this.sourceIP+"\","
+				+ "sourcePort:\""+this.sourcePort+"\","
+						+ "header:"+this.header.toString()+"}";
+	}
+	
+	public String getUIDString() {
+		return this.header.getUIDString();
+	}
 }

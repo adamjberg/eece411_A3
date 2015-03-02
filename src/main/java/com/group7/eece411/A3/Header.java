@@ -84,6 +84,18 @@ public class Header {
 		return this.uniqueId;
 	}
 	
+	public String getUIDString() {
+		return this.fields.get("sourceIP")+":"+
+				this.fields.get("port")+":"+
+				this.fields.get("random")+":"+
+				this.fields.get("timestamp");
+	}
+	
+	@Override 
+	public String toString() {
+		return this.fields.toString();
+	}
+	
 	@Override
 	public boolean equals(Object other) {
 		boolean result = false;
