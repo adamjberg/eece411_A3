@@ -4,12 +4,17 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+
+import org.christianschenk.simplecache.SimpleCache;
 
 public class KVService extends Service {
 
+	public static final long REQUEST_TIMEOUT = 5;
+	private SimpleCache<Packet> requestCache;
+	
 	public KVService(int period) throws UnknownHostException {
 		super(period);
+		this.requestCache = new SimpleCache<Packet>(REQUEST_TIMEOUT);
 	}
 
 	public void run() {
@@ -30,18 +35,38 @@ public class KVService extends Service {
     }
 	
 	private void process(Packet p) throws IOException {
-		NodeInfo target = getResponsibleNode(p.getHeader("key"));
+		NodeInfo target = Datastore.getInstance().getResponsibleNode(p.getHeader("key")[0]);
+		
 		switch (p.getHeader("command")[0]) {
 			case 1: 
-				this.putAction(p, target);
+				this.putRequest(p, target);
 				break;
 			case 2: 
-				this.getAction(p, target);
+				this.getRequest(p, target);
 				break;
 			case 3: 
-				this.removeAction(p, target);
+				this.removeRequest(p, target);
 				break;
 			case 4: 
+				this.stop();
+				break;
+			case 21: 
+				this.putRequest(p, target);
+				break;
+			case 22: 
+				this.getRequest(p, target);
+				break;
+			case 23: 
+				this.removeRequest(p, target);
+				break;
+			case 31: 
+				this.putRespond(p, target);
+				break;
+			case 32: 
+				this.getRespond(p, target);
+				break;
+			case 33: 
+				this.removeRespond(p, target);
 				break;
 			default:
 				this.client.send(Protocol.sendResponse(p, null, 5));
@@ -49,78 +74,68 @@ public class KVService extends Service {
 		}
 	}
 	
-	private void getAction(Packet packet, NodeInfo target) throws IOException {
-		byte[] value = null;
+	private void getRequest(Packet packet, NodeInfo target) throws IOException {
+		if(forwardRequest(packet, target)) return;
+		byte[] value = target.get(packet.getStringHeader("key"));		
 		Packet response = null;
-		if(Datastore.getInstance().isThisNode(target)) {
-			value = target.get(packet.getStringHeader("key"));			
-			if(value == null) {
-				Datastore.getInstance().addLog("INFO", "Cannot GET the value");
-				response = Protocol.sendResponse(packet, null, 1);
-			} else {
-				Datastore.getInstance().addLog("INFO", "Value GET from key : "+packet.getStringHeader("key") + " is " +StringUtils.byteArrayToHexString(value));
-				response = Protocol.sendResponse(packet, target.get(packet.getStringHeader("key")), 0);
-			}
-			Datastore.getInstance().storeCache(packet.getUIDString(), response);
-			this.client.send(response);
+		if(value == null) {
+			Datastore.getInstance().addLog("INFO", "Cannot GET the value");
+			response = Protocol.sendResponse(packet, null, 1);
 		} else {
+			Datastore.getInstance().addLog("INFO", "Value GET from key : "+packet.getStringHeader("key") + " is " +StringUtils.byteArrayToHexString(value));
+			response = Protocol.sendResponse(packet, target.get(packet.getStringHeader("key")), 0);
+		}
+		Datastore.getInstance().storeCache(packet.getUIDString(), response);
+		this.client.send(response);
+	}
+	
+	private void putRequest(Packet packet, NodeInfo target) throws IOException {
+		if(forwardRequest(packet, target)) return;
+		Packet response = null;
+		if(!target.put(packet.getStringHeader("key"), packet.getPayload())) {
+			Datastore.getInstance().addLog("Info", "Cannot PUT (key,value) to "+target.getHost());
+			response = Protocol.sendResponse(packet, null, 2);
+		} else {
+			Datastore.getInstance().addLog("Info", "PUT (key,value) to "+target.getHost());
+			response = Protocol.sendResponse(packet, null, 0);				
+		}
+		Datastore.getInstance().storeCache(packet.getUIDString(), response);
+		this.client.send(response);
+	}
+	
+	private void removeRequest(Packet packet, NodeInfo target) throws IOException {
+		if(forwardRequest(packet, target)) return;
+		Packet response = null;
+		if(target.get(packet.getStringHeader("key")) != null) {
+			target.remove(packet.getStringHeader("key"));
+			Datastore.getInstance().addLog("Info", "REMOVE key from "+target.getHost());
+			response = Protocol.sendResponse(packet, null, 0);
+		} else {
+			Datastore.getInstance().addLog("Info", "Cannot REMOVE key from "+target.getHost());
+			response = Protocol.sendResponse(packet, null, 1);
+		}
+		Datastore.getInstance().storeCache(packet.getUIDString(), response);
+		this.client.send(response);
+	}
+	
+	public void putRespond(Packet packet, NodeInfo target) {
+		
+	}
+	
+	public void getRespond(Packet packet, NodeInfo target) {
+		
+	}
+	public void removeRespond(Packet packet, NodeInfo target) {
+		
+	}
+	
+	private Boolean forwardRequest(Packet packet, NodeInfo target) throws UnknownHostException, IOException {
+		if(!Datastore.getInstance().isThisNode(target)) {
 			Datastore.getInstance().addLog("INFO", "Forwarding to "+target.getHost());
-			//TODO: construct and send request packet
-			this.client.send(target.getHost(), target.getPort(), packet);	
-		}
-	}
-	
-	private void putAction(Packet packet, NodeInfo target) throws IOException {
-		System.out.println("Try to PUT (key,value) to "+target.getHost() +"...");
-		/*try {
-			if(db.isThisNode(target)) {
-				if(!target.put(this.packet.getStringHeader("key"), this.packet.getPayload())) {
-					this.client.send(Protocol.sendResponse(this.packet, null, 2));
-				} else {
-					System.out.println("PUT key : "+this.packet.getStringHeader("key")+
-							", value : "+StringUtils.byteArrayToHexString(this.packet.getPayload()) + 
-							" in "+target.getHost());
-					this.client.send(Protocol.sendResponse(this.packet, null, 0));
-					
-				}
-			} else {
-				System.out.println("Forwarding to "+target.getHost());
-				this.client.send(target.getHost(), target.getPort(), packet);	
-			}*/
-	}
-	
-	private void removeAction(Packet packet, NodeInfo target) throws IOException {
-		System.out.println("Try to REMOVE key from "+target.getHost());
-		/*
-			if(db.isThisNode(target)) {
-				if(target.get(this.packet.getStringHeader("key")) != null) {
-					target.remove(this.packet.getStringHeader("key"));
-					System.out.println("REMOVED "+this.packet.getStringHeader("key"));
-					this.client.send(Protocol.sendResponse(this.packet, null, 0));
-				} else {
-					this.client.send(Protocol.sendResponse(this.packet, null, 1));
-				}
-			} else {
-				// send remote request
-				System.out.println("Forwarding to "+target.getHost());
-				this.client.send(target.getHost(), target.getPort(), packet);	
-			}*/
-	}
-	/*
-	 * Get the node that responsible for the key, it can be the caller node or other remote nodes
-	 */
-	private NodeInfo getResponsibleNode(byte[] key) {
-		List<Integer> allLocations = Datastore.getInstance().findAllLocations();
-		Integer closestLocation = null;
-		for(Integer loc : allLocations) {
-			if(loc < key[0] && (closestLocation == null || loc > closestLocation)) {
-				closestLocation = loc;
-			}
-		}
-		if(closestLocation == null) { 
-			//for key[0] between 0 and the location of first node
-			closestLocation = allLocations.get(allLocations.size()-1);
-		}
-		return Datastore.getInstance().find(closestLocation);
+			Packet requestPacket = Protocol.forwardRequest(packet);
+			this.requestCache.put(requestPacket.getUIDString(), packet);
+			this.client.send(requestPacket);
+			return true;
+		} return false;
 	}
 }

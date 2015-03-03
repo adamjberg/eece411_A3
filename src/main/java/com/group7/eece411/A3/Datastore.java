@@ -9,7 +9,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -27,10 +26,11 @@ import org.christianschenk.simplecache.SimpleCache;
  * */
 public class Datastore {
 	public static int CIRCLE_SIZE = 256;
-	public static final long TIMEOUT = 5;
+	public static final long TIMEOUT = 30;
 
 	private static Datastore instance = null;
 	private ConcurrentHashMap<Integer, NodeInfo> successors;
+	private ConcurrentHashMap<Integer, NodeInfo> offlineSuccessors;
 	private Integer self;
 	private ArrayList<Packet> packetQueue;
 	private SimpleCache<Packet> cache;
@@ -38,6 +38,7 @@ public class Datastore {
 
 	private Datastore() {
 		this.successors = new ConcurrentHashMap<Integer, NodeInfo>();
+		this.offlineSuccessors = new ConcurrentHashMap<Integer, NodeInfo>();
 		this.packetQueue = new ArrayList<Packet>();
 		this.logs = new ArrayList<String>();
 		this.cache = new SimpleCache<Packet>(TIMEOUT);
@@ -87,8 +88,41 @@ public class Datastore {
 		return asSortedList(this.successors.keySet());
 	}
 	
-	public Collection<NodeInfo> findAll() {
-		return this.successors.values();
+	public List<Integer> findAllActiveLocations() {
+		return asSortedList(this.successors.keySet());
+	}
+	
+	public NodeInfo findRandomNode() {
+		return this.getResponsibleNode((int)Math.random()*CIRCLE_SIZE);
+	}
+	
+	/*
+	 * Get the node that responsible for the key, it can be the caller node or other remote nodes
+	 */
+	public NodeInfo getResponsibleNode(int key) {
+		List<Integer> allLocations = this.findAllActiveLocations();
+		Integer closestLocation = null;
+		for(Integer loc : allLocations) {
+			if(loc < key && (closestLocation == null || loc > closestLocation)) {
+				closestLocation = loc;
+			}
+		}
+		if(closestLocation == null) { 
+			//for key[0] between 0 and the location of first node
+			closestLocation = allLocations.get(allLocations.size()-1);
+		}
+		return this.find(closestLocation);
+	}
+	
+	public void setNodeStatus(int id, boolean isOnline) {
+		if(isOnline) {
+			this.successors.put(id, this.offlineSuccessors.remove(id));
+		} else {
+			this.offlineSuccessors.put(id, this.successors.remove(id));
+		}
+	}
+	public String findAll() {
+		return Arrays.toString(this.successors.values().toArray());
 	}
 
 	public NodeInfo findThisNode() {
@@ -110,15 +144,8 @@ public class Datastore {
 							Integer.valueOf(lineArray[1]),
 							Integer.valueOf(lineArray[2]));
 
-					/*
-					 * Find the first NodeInfo that matches my system. There may be
-					 * multiple that match because we may want to run multiple
-					 * services on the same machine i.e. testing
-					 */
-					/*
-					 * Idea of testing with multiple threads can become very complex,
-					 * I would suggest we do not go that way.
-					 */
+					n.setOnline(true);
+					
 					if (self == null && isNodeInfoMine(n)) {
 						System.out.println("Start machine : "+n.getHost()+" with location "+n.getLocation());
 						this.self = n.getLocation();

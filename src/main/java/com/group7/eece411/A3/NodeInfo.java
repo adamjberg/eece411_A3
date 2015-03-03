@@ -1,5 +1,6 @@
 package com.group7.eece411.A3;
 
+import java.util.Date;
 import java.util.concurrent.ConcurrentHashMap;
 
 
@@ -14,12 +15,16 @@ public class NodeInfo {
 	private int location;
 	private ConcurrentHashMap<String, byte[]> kvStore;
 	private long spaceAvailable = 64 * 1024 * 1024;
+	private boolean isOnline;
+	private Date lastUpdateDate;
 	
 	public NodeInfo (String host, int port, int location) {
 		this.hostName = host;
 		this.port = port;
 		this.location = location;
 		this.kvStore = new ConcurrentHashMap<String, byte[]>();
+		this.setOnline(false);
+		this.setLastUpdateDate(new Date());
 	}
 
 	public byte[] get(String key) {
@@ -53,6 +58,54 @@ public class NodeInfo {
 	
 	public int getLocation() {
 		return this.location;
+	}
+
+	/**
+	 * @return the isOnline
+	 */
+	public boolean isOnline() {
+		return isOnline;
+	}
+
+	/**
+	 * @param isOnline the isOnline to set
+	 */
+	public void setOnline(boolean isOnline, Date lastUpdateDate) {
+		this.isOnline = isOnline;
+		this.setLastUpdateDate(lastUpdateDate);
+	}
+
+	public void setOnline(boolean isOnline) {
+		this.isOnline = isOnline;
+		this.setLastUpdateDate(new Date());
+	}
+	
+	/**
+	 * @return the lastUpdateDate
+	 */
+	public Date getLastUpdateDate() {
+		return lastUpdateDate;
+	}
+
+	/**
+	 * @param lastUpdateDate the lastUpdateDate to set
+	 */
+	public void setLastUpdateDate(Date lastUpdateDate) {
+		this.lastUpdateDate = lastUpdateDate;
+	}
+	
+	public String toString() {
+		return "{hostname:\""+this.hostName+"\","
+				+ "port:\""+this.port+"\","
+						+ "index:\""+this.location+"\","
+								+ "status:"+this.isOnline()+","
+										+ "lastUpdateDate:\""+this.getLastUpdateDate().getTime()+"\","
+												+ "spaceAvailable:"+this.spaceAvailable+","
+														+ "keys:"+this.kvStore.keySet().toString()+"}";
+	}
+	
+	public String getKVString() {
+		return this.kvStore.toString();
 	}
 }
 

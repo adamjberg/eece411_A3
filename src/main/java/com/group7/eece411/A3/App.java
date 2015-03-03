@@ -33,6 +33,7 @@ public class App {
 		this.services = new HashMap<String, Service>();
 		this.services.put("monitor", (new MonitorService(30000)));
 		this.services.put("kvStore", (new KVService(100)));
+		this.services.put("sync", (new SyncService(10000)));
 	}
 
 	public void run() {
@@ -49,8 +50,8 @@ public class App {
 				if( cachePacket == null) {
 					this.db.queue(p);
 				} else {
-					//respond cache 
-					this.db.addLog("DEBUG", cachePacket.getUIDString());
+					this.db.addLog("DEBUG", "Cache found.");
+					
 				}
 			}  catch(Exception e) {
 				Datastore.getInstance().addLog("EXCEPTION", Arrays.toString(e.getStackTrace()));	
