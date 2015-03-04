@@ -73,7 +73,7 @@ public class Datastore {
 			    }
 			});
 			clone = this.packetQueue;
-			this.packetQueue = null;
+			this.packetQueue = new ArrayList<Packet>();
 		}
 		return clone;
 	}

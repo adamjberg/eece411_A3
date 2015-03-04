@@ -68,7 +68,7 @@ public class UDPClient {
 		if (p == null) {
 			throw new IllegalArgumentException();
 		}
-		this.send(p.getSourceIp(), p.getSourcePort(), p);
+		this.send(p.getDestinationIP(), p.getDestinationPort(), p);
 	}
 	
 	public void send(String host, int port, Packet p) throws IOException {

@@ -62,17 +62,19 @@ public class RouteService extends Service {
 				this.stop();
 				break;
 			case 31: 
-				kvStore.respondPut(p);
+				kvStore.forwardResponse(p);
 				break;
 			case 32: 
-				kvStore.respondGet(p);
+				kvStore.forwardResponse(p);
 				break;
 			case 33: 
-				kvStore.respondRemove(p);
+				kvStore.forwardResponse(p);
 				break;
 			case 34:
+				kvStore.forwardResponse(p);
 				break;
 			case 35:
+				kvStore.forwardResponse(p);
 				break;
 			default:
 				Datastore.getInstance().addLog("UNKNOWN", "Unknown Command Code "+p.getHeader("command")[0]);

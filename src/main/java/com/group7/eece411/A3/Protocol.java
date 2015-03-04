@@ -39,39 +39,22 @@ public class Protocol {
 			h.setField("value-length", ByteOrder.int2leb(value.length));
 		}
 		Packet p = new Packet(h, value);
-		p.setSourceIP(req.getSourceIp());
-		p.setSourcePort(req.getSourcePort());
+		p.setDestinationIP(req.getDestinationIP());
+		p.setDestinationPort(req.getDestinationPort());
 		Datastore.getInstance().addLog("DEBUG", p.toString());
 		return p;
 	}
 	
 	/*
-	 * Create a response packet from bytes we received. eg) we are receiving
-	 * response from a request we sent earlier.
-	 */
-	public static Packet receiveResponse(byte[] packet, Packet req) {
-		//TODO : check uniqueId etc.
-		if(Arrays.equals(Arrays.copyOfRange(packet, 0, 16), req.getUID())) {
-			
-		}
-		return null;
-	}
-	
-	/*
-	 * Create request packet for sending
-	 */
-	public static Packet sendRequest() {
-		return null;
-	}
-	
-	/*
 	 * Create request packet to forward
 	 */
-	public static Packet forwardRequest(Packet packet) throws UnknownHostException, IOException {
+	public static Packet forwardRequest(Packet packet, NodeInfo target) throws UnknownHostException, IOException {
 		Packet clone = packet.clone();
 		byte[] uniqueId = generateUniqueID();
 		decodeUniqueId(uniqueId, clone.getHeader());
 		clone.getHeader().setField("command", new byte[]{(byte)(20 + (int)clone.getHeader("command")[0])});
+		clone.setDestinationIP(target.getHost());
+		clone.setDestinationPort(target.getPort());
 		return clone;
 	}
 	
@@ -108,8 +91,8 @@ public class Protocol {
 			}
 			
 		}
-		p.setSourceIP(host);
-		p.setSourcePort(port);
+		p.setDestinationIP(host);
+		p.setDestinationPort(port);
 		return p;
 	}
 	

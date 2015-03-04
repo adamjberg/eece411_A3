@@ -60,24 +60,17 @@ public class KVStore {
 		this.client.send(response);
 	}
 	
-	public void respondPut(Packet packet) {
-		
-	}
-	
-	public void respondGet(Packet packet) {
-		
-	}
-	public void respondRemove(Packet packet) {
+	public void forwardResponse(Packet packet) {
 		
 	}
 	
 	private Boolean forwardRequest(Packet packet, NodeInfo target) throws UnknownHostException, IOException {
 		if(!Datastore.getInstance().isThisNode(target)) {
-			Datastore.getInstance().addLog("INFO", "Forwarding to "+target.getHost());
-			Packet requestPacket = Protocol.forwardRequest(packet);
+			Packet requestPacket = Protocol.forwardRequest(packet, target);
 			this.requestCache.put(requestPacket.getUIDString(), packet);
-			//TODO create new Adapter to send requestPacket and listen for reply
-			this.client.send(requestPacket);
+			//create new Adapter to send requestPacket and listen for reply
+			(new Thread(new Adapter(requestPacket))).start();
+			//this.client.send(requestPacket);
 			return true;
 		} return false;
 	}
