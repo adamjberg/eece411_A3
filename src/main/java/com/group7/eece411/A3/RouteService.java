@@ -7,21 +7,23 @@ import java.util.Arrays;
 
 import org.christianschenk.simplecache.SimpleCache;
 
-public class KVService extends Service {
+public class RouteService extends Service {
 
 	public static final long REQUEST_TIMEOUT = 5;
 	private SimpleCache<Packet> requestCache;
+	private App program;
 	
-	public KVService(int period) throws UnknownHostException {
-		super(period);
+	public RouteService(int period, App app) throws UnknownHostException {
+		super(period, 41172);
 		this.requestCache = new SimpleCache<Packet>(REQUEST_TIMEOUT);
+		this.program = app;
 	}
 
 	public void run() {
 		try {
 			ArrayList<Packet> tasklist = (ArrayList<Packet>) Datastore.getInstance().poll();
 			for(Packet task : tasklist) {
-				Datastore.getInstance().addLog("DEBUG", "RECEIVE : "+task.toString());
+				Datastore.getInstance().addLog("RECEIVE", task.toString());
 				try {
 					process(task);
 				} catch(IOException ioe) {
@@ -30,7 +32,7 @@ public class KVService extends Service {
 				}
 			}
 		} catch(Exception e) {
-			Datastore.getInstance().addLog("Exception", Arrays.toString(e.getStackTrace()));
+			Datastore.getInstance().addException("Exception", e);
 		}
     }
 	
@@ -48,7 +50,7 @@ public class KVService extends Service {
 				this.removeRequest(p, target);
 				break;
 			case 4: 
-				this.stop();
+				this.program.terminate();
 				break;
 			case 21: 
 				this.putRequest(p, target);
@@ -58,6 +60,9 @@ public class KVService extends Service {
 				break;
 			case 23: 
 				this.removeRequest(p, target);
+				break;
+			case 24:
+				this.stop();
 				break;
 			case 31: 
 				this.putRespond(p, target);
@@ -69,6 +74,7 @@ public class KVService extends Service {
 				this.removeRespond(p, target);
 				break;
 			default:
+				Datastore.getInstance().addLog("UNKNOWN", "Unknown Command Code "+p.getHeader("command")[0]);
 				this.client.send(Protocol.sendResponse(p, null, 5));
 				break;
 		}
@@ -79,10 +85,10 @@ public class KVService extends Service {
 		byte[] value = target.get(packet.getStringHeader("key"));		
 		Packet response = null;
 		if(value == null) {
-			Datastore.getInstance().addLog("INFO", "Cannot GET the value");
+			Datastore.getInstance().addLog("GET", "KEY does not exisit.");
 			response = Protocol.sendResponse(packet, null, 1);
 		} else {
-			Datastore.getInstance().addLog("INFO", "Value GET from key : "+packet.getStringHeader("key") + " is " +StringUtils.byteArrayToHexString(value));
+			Datastore.getInstance().addLog("GET", "GET("+(new String(packet.getHeader("key"), "utf-8")) + ") : " +StringUtils.byteArrayToHexString(value));
 			response = Protocol.sendResponse(packet, target.get(packet.getStringHeader("key")), 0);
 		}
 		Datastore.getInstance().storeCache(packet.getUIDString(), response);
@@ -93,10 +99,10 @@ public class KVService extends Service {
 		if(forwardRequest(packet, target)) return;
 		Packet response = null;
 		if(!target.put(packet.getStringHeader("key"), packet.getPayload())) {
-			Datastore.getInstance().addLog("Info", "Cannot PUT (key,value) to "+target.getHost());
+			Datastore.getInstance().addLog("PUT", "Failed PUT (key,value) to "+target.getHost());
 			response = Protocol.sendResponse(packet, null, 2);
 		} else {
-			Datastore.getInstance().addLog("Info", "PUT (key,value) to "+target.getHost());
+			Datastore.getInstance().addLog("PUT", "(key,value) to "+target.getHost());
 			response = Protocol.sendResponse(packet, null, 0);				
 		}
 		Datastore.getInstance().storeCache(packet.getUIDString(), response);
@@ -108,10 +114,10 @@ public class KVService extends Service {
 		Packet response = null;
 		if(target.get(packet.getStringHeader("key")) != null) {
 			target.remove(packet.getStringHeader("key"));
-			Datastore.getInstance().addLog("Info", "REMOVE key from "+target.getHost());
+			Datastore.getInstance().addLog("REMOVE", "from "+target.getHost());
 			response = Protocol.sendResponse(packet, null, 0);
 		} else {
-			Datastore.getInstance().addLog("Info", "Cannot REMOVE key from "+target.getHost());
+			Datastore.getInstance().addLog("REMOVE", "Failed REMOVE key from "+target.getHost());
 			response = Protocol.sendResponse(packet, null, 1);
 		}
 		Datastore.getInstance().storeCache(packet.getUIDString(), response);

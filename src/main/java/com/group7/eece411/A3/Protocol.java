@@ -29,13 +29,19 @@ public class Protocol {
 	public static Packet sendResponse(Packet req, byte[] value, int responseCode) {
 		Header h = new Header();
 		decodeUniqueId(req.getUID(), h);
-		h.setField("response", new byte[]{(byte)responseCode});
+		int response = 0;
+		if((int)(req.getHeader("command")[0]) / 10 == 2) {
+			//internal request, respond with internal code
+			response = 30;
+		}
+		h.setField("response", new byte[]{(byte)( response + responseCode)});
 		if(responseCode == 0 && value != null && value.length > 0 && value.length <= MAX_VALUE_LENGTH) {			;
 			h.setField("value-length", ByteOrder.int2leb(value.length));
 		}
 		Packet p = new Packet(h, value);
 		p.setSourceIP(req.getSourceIp());
 		p.setSourcePort(req.getSourcePort());
+		Datastore.getInstance().addLog("DEBUG", p.toString());
 		return p;
 	}
 	
@@ -65,7 +71,7 @@ public class Protocol {
 		Packet clone = packet.clone();
 		byte[] uniqueId = generateUniqueID();
 		decodeUniqueId(uniqueId, clone.getHeader());
-		clone.getHeader().setField("sourceIP", Arrays.copyOfRange(uniqueId, 0, 4));
+		clone.getHeader().setField("command", new byte[]{(byte)(20 + (int)clone.getHeader("command")[0])});
 		return clone;
 	}
 	
@@ -87,7 +93,7 @@ public class Protocol {
 			if(inBytes[0] == 1) { //Only if it is a put command
 				header.setField("value-length", Arrays.copyOfRange(inBytes, KEY_SIZE_IN_BYTES+1, MIN_MESSAGE_SIZE+VALUE_LENGTH_SIZE_IN_BYTES)); // the [33:34) the elements are the length
 				int val_len_int = ByteOrder.leb2int(header.getRawHeaderValue("value-length"), 0, VALUE_LENGTH_SIZE_IN_BYTES);
-				System.out.println("length of value : " + val_len_int);
+
 				if(MIN_MESSAGE_SIZE + VALUE_LENGTH_SIZE_IN_BYTES + val_len_int > inBytes.length || 
 						val_len_int > MAX_VALUE_LENGTH) { //Check the length of val
 					header.setField("command", new byte[] {99}); 
@@ -101,8 +107,6 @@ public class Protocol {
 				p = new Packet(header);
 			}
 			
-			System.out.println("command : "+header.getRawHeaderValue("command")[0]);
-			System.out.println("key : "+header.getHeaderValue("key"));	
 		}
 		p.setSourceIP(host);
 		p.setSourcePort(port);

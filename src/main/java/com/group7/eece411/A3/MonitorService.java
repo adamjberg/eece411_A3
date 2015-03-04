@@ -17,10 +17,12 @@ import java.util.Arrays;
  */
 public class MonitorService extends Service
 {	
+	public static final String host = "127.0.0.1";//"54.68.197.12";
+	public static final int port = 41170;
 	private String loc;
 	
 	public MonitorService(int period) throws MalformedURLException, IOException {
-		super(period);
+		super(period, 41171);
 		this.loc = request("http://ip-api.com/json/"+InetAddress.getLocalHost().getHostAddress(), "GET");
 	}
 	
@@ -28,9 +30,9 @@ public class MonitorService extends Service
     {	
 		try {
 			System.out.println(new String(getData()));
-			//client.send(host, port, dataString);
+			client.send(host, port, getData());
 		} catch (Exception e) {
-			Datastore.getInstance().addLog("EXCEPTION", Arrays.toString(e.getStackTrace()));
+			Datastore.getInstance().addException("EXCEPTION", e);
 		}
     }
     

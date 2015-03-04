@@ -17,6 +17,10 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.christianschenk.simplecache.SimpleCache;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 /**
  * Ehsan Added this so it might not be complete: 
@@ -78,7 +82,11 @@ public class Datastore {
 	
 	// What does this location mean ?
 	public NodeInfo find(int location) {
-		return this.successors.get(location);
+		NodeInfo found = this.successors.get(location);
+		if(found == null) {
+			found = this.offlineSuccessors.get(location);
+		}
+		return found;
 	}
  
 	/*
@@ -122,6 +130,7 @@ public class Datastore {
 		}
 	}
 	public String findAll() {
+		this.successors.get(this.self).setLastUpdateDate(new Date());
 		return Arrays.toString(this.successors.values().toArray());
 	}
 
@@ -247,15 +256,39 @@ public class Datastore {
 	
 	public void addLog(String type, String log) {
 		String str = "{type:\""+type+"\","
-				+ "time:\""+(new Date()).toString()+"\","
+				+ "time:\""+(new Date()).getTime()+"\","
 						+ "log:\""+log+"\"}";
-		this.logs.add(str);
+		synchronized(this.logs) {
+			this.logs.add(str);
+		}
 		System.out.println(str);
 	}
 	
-	public String getLogs() {
-		String str = this.logs.toString();
-		this.logs.clear();
-		return str;
+	public void addException(String type, Exception e) {
+		this.addLog(type, "{message:\""+e.getMessage()+"\", trace:"+Arrays.toString(e.getStackTrace())+"}");	
 	}
+	public String getLogs() {
+		synchronized(this.logs) {
+			String str = this.logs.toString();
+			this.logs.clear();
+			return str;
+		}
+	}
+	
+	public void sync(String dataFeed) {
+		JSONParser parser=new JSONParser();
+		NodeInfo node = null;
+		JSONObject jobj = null;
+		try {
+			JSONArray array=(JSONArray)parser.parse(dataFeed);
+			for(Object obj : array.toArray()) {
+				jobj = (JSONObject) obj;
+				node = this.find(Integer.valueOf((String)jobj.get("index")));
+				node.sync(jobj);				
+			}
+		} catch (ParseException e) {
+			this.addLog("ParseException", Arrays.toString(e.getStackTrace()));
+		}		  
+	}
+	
 }

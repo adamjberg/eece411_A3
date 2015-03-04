@@ -47,6 +47,10 @@ public class UDPClient {
 		return this.source;
 	}
 
+	public void setListenPort(int port) {
+		this.listenPort = port;
+	}
+	
 	public void createSocket() throws SocketException {
 		if (this.socket == null) {
 			this.socket = new DatagramSocket(this.listenPort);
@@ -71,11 +75,19 @@ public class UDPClient {
 		if (host == null || p == null) {
 			throw new IllegalArgumentException();
 		}
-		System.out.println("Sending to "+p.getSourceIp()+":"+p.getSourcePort());
 		this.createSocket();
 		byte[] request = p.getBytes();
-		System.out.println("message going to be sent has size of "+request.length+" with response/command code : "+request[16]);
 		DatagramPacket packet = new DatagramPacket(request, request.length,
+				InetAddress.getByName(host), port);
+		socket.send(packet);
+	}
+	
+	public void send(String host, int port, byte[] data) throws IOException {
+		if (host == null || data == null) {
+			throw new IllegalArgumentException();
+		}
+		this.createSocket();
+		DatagramPacket packet = new DatagramPacket(data, data.length,
 				InetAddress.getByName(host), port);
 		socket.send(packet);
 	}
@@ -87,6 +99,16 @@ public class UDPClient {
 		socket.setSoTimeout(this.timeout);
 		socket.receive(packet);
 		return Protocol.receiveRequest(Arrays.copyOfRange(buffer, 0, packet.getLength()), packet.getAddress().getHostAddress(), packet.getPort());
+	}
+	
+	public DatagramPacket receive(byte[] buffer) throws IOException {
+		this.createSocket();
+		//byte buffer[] = new byte[16384];
+		DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+		socket.setSoTimeout(this.timeout);
+		socket.receive(packet);
+		return packet;
+		//return Protocol.receiveRequest(Arrays.copyOfRange(buffer, 0, packet.getLength()), packet.getAddress().getHostAddress(), packet.getPort());
 	}
 
 }

@@ -10,8 +10,8 @@ public class Service extends TimerTask{
 	protected Timer timer;
 	protected int period;
 	
-	public Service(int period) throws UnknownHostException {
-		this.client = new UDPClient(5628);
+	public Service(int period, int port) throws UnknownHostException {
+		this.client = new UDPClient(port);
 		this.period = period;
 	}
 	
@@ -27,6 +27,7 @@ public class Service extends TimerTask{
 
     
     public void stop() {
+    	Datastore.getInstance().addLog("INFO", "Stopping service.");
     	this.timer.cancel();    	
     }
     
