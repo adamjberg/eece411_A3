@@ -65,18 +65,16 @@ public class Datastore {
 	}
 	
 	public List<Packet> poll() {
-		ArrayList<Packet> clone = new ArrayList<Packet>();
-		synchronized(this.packetQueue) {
-			for(Packet p : this.packetQueue) {
-				clone.add(p);
-			}
-			this.packetQueue.clear();
+		ArrayList<Packet> clone = null;
+		synchronized(this.packetQueue) {		
+			Collections.sort(this.packetQueue, new Comparator<Packet>() {
+				public int compare(Packet p1, Packet p2) {
+			        return p1.getDate().compareTo(p2.getDate());
+			    }
+			});
+			clone = this.packetQueue;
+			this.packetQueue = null;
 		}
-		Collections.sort(clone, new Comparator<Packet>() {
-			public int compare(Packet p1, Packet p2) {
-		        return p1.getDate().compareTo(p2.getDate());
-		    }
-		});
 		return clone;
 	}
 	

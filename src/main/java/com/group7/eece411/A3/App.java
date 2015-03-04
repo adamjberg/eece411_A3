@@ -37,10 +37,7 @@ public class App {
 	}
 
 	public void run() {
-		Iterator<Service> serviceIterator = this.services.values().iterator();
-		while(serviceIterator.hasNext()) {
-			serviceIterator.next().start();
-		}
+		this.start();
 		
 		Packet p = null;
 		do {
@@ -60,6 +57,13 @@ public class App {
     		}
 		} while (!this.services.values().isEmpty());
 	}	
+	
+	public void start() {
+		Iterator<Service> serviceIterator = this.services.values().iterator();
+		while(serviceIterator.hasNext()) {
+			serviceIterator.next().start();
+		}
+	}
 	
 	public void terminate() {
 		Datastore.getInstance().addLog("SYSTEM", "The system is shutting down.");
