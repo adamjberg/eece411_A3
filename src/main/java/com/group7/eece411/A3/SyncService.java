@@ -28,7 +28,7 @@ public class SyncService extends Service {
 				break;
 			}
 		}
-		Datastore.getInstance().addLog("HASHTABLE", Datastore.getInstance().findAll());
+		//Datastore.getInstance().addLog("HASHTABLE", Datastore.getInstance().findAll());
 		
 	}
 	

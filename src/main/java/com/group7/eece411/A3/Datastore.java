@@ -9,6 +9,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -38,13 +39,13 @@ public class Datastore {
 	private Integer self;
 	private ArrayList<Packet> packetQueue;
 	private SimpleCache<Packet> cache;
-	private ArrayList<String> logs;
+	private ArrayList<JSONObject> logs;
 
 	private Datastore() {
 		this.successors = new ConcurrentHashMap<Integer, NodeInfo>();
 		this.offlineSuccessors = new ConcurrentHashMap<Integer, NodeInfo>();
 		this.packetQueue = new ArrayList<Packet>();
-		this.logs = new ArrayList<String>();
+		this.logs = new ArrayList<JSONObject>();
 		this.cache = new SimpleCache<Packet>(TIMEOUT);
 		setupNodes();
 	}
@@ -128,9 +129,9 @@ public class Datastore {
 			this.offlineSuccessors.put(id, this.successors.remove(id));
 		}
 	}
-	public String findAll() {
+	public Collection<NodeInfo> findAll() {
 		this.successors.get(this.self).setLastUpdateDate(new Date());
-		return Arrays.toString(this.successors.values().toArray());
+		return this.successors.values();
 	}
 
 	public NodeInfo findThisNode() {
@@ -253,24 +254,35 @@ public class Datastore {
 		this.cache.put(uid, packet);
 	}	
 	
+	@SuppressWarnings("unchecked")
 	public void addLog(String type, String log) {
-		String str = "{type:\""+type+"\","
-				+ "time:\""+(new Date()).getTime()+"\","
-						+ "log:\""+log+"\"}";
+		JSONObject map=new JSONObject();
+		map.put("type", type);
+		map.put("time", (new Date()).getTime());
+		map.put("log", log);
 		synchronized(this.logs) {
-			this.logs.add(str);
+			this.logs.add(map);
 		}
-		System.out.println(str);
+		System.out.println(map.toJSONString());
 	}
 	
+	@SuppressWarnings("unchecked")
 	public void addException(String type, Exception e) {
-		this.addLog(type, "{message:\""+e.getMessage()+"\", trace:"+Arrays.toString(e.getStackTrace())+"}");	
-	}
-	public String getLogs() {
+		JSONObject map=new JSONObject();
+		map.put("type", type);
+		map.put("message", e.getMessage());
+		map.put("trace", e.getStackTrace());
 		synchronized(this.logs) {
-			String str = this.logs.toString();
-			this.logs.clear();
-			return str;
+			this.logs.add(map);
+		}
+		System.out.println(map.toJSONString());
+	}
+	
+	public ArrayList<JSONObject> getLogs() {
+		synchronized(this.logs) {
+			ArrayList<JSONObject> ret = this.logs;
+			this.logs = new ArrayList<JSONObject>();
+			return ret;
 		}
 	}
 	

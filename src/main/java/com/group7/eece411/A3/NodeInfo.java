@@ -100,14 +100,17 @@ public class NodeInfo {
 		this.lastUpdateDate = lastUpdateDate;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public String toString() {
-		return "{hostname:\""+this.hostName+"\","
-				+ "port:\""+this.port+"\","
-						+ "index:\""+this.location+"\","
-								+ "status:"+this.isOnline()+","
-										+ "lastUpdateDate:\""+this.getLastUpdateDate().getTime()+"\","
-												+ "spaceAvailable:"+this.spaceAvailable+","
-														+ "kvStore:"+this.getKVString()+"}";
+		JSONObject map=new JSONObject();
+		map.put("hostname", this.hostName);
+		map.put("port", this.port);
+		map.put("location", this.location);
+		map.put("status", this.isOnline());
+		map.put("lastUpdateDate", this.getLastUpdateDate().getTime());
+		map.put("spaceAvailable", this.spaceAvailable);
+		map.put("kvstore", this.kvStore.values());
+		return map.toJSONString();
 	}
 	
 	public String getKVString() {

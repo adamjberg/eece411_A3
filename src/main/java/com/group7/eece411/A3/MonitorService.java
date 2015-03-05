@@ -8,7 +8,11 @@ import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.text.ParseException;
+
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 
 /**
  * 
@@ -18,11 +22,16 @@ public class MonitorService extends Service
 {	
 	public static final String host = "127.0.0.1";//"54.68.197.12";
 	public static final int port = 41170;
-	private String loc;
+	private JSONObject loc;
 	
-	public MonitorService(int period) throws MalformedURLException, IOException {
+	public MonitorService(int period) throws IOException {
 		super(period, 41171);
-		this.loc = request("http://ip-api.com/json/"+InetAddress.getLocalHost().getHostAddress(), "GET");
+		try {
+			this.loc = (JSONObject)(new JSONParser()).parse(request("http://ip-api.com/json/"+InetAddress.getLocalHost().getHostAddress(), "GET"));
+		} catch (org.json.simple.parser.ParseException e) {
+			Datastore.getInstance().addException("JSON ParseException", e);
+			this.loc = new JSONObject();
+		} 
 	}
 	
     public void run()
@@ -45,16 +54,18 @@ public class MonitorService extends Service
 		return null;
 	}
     
-	public byte[] getData() throws IOException, ParseException {
-    	String data = "{hostname:\""+SystemCmd.getHostName()+"\","
-				+ "systemUptime:\""+SystemCmd.uptime()+"\","
-						+ "spaceAvailable:\""+SystemCmd.getDiskAvailableSize()+"\","
-								+ "averageLoads:\""+SystemCmd.getLoad()+"\","
-										+ "serviceUptime:\""+ManagementFactory.getRuntimeMXBean().getUptime()+"\","
-												+ "loc:\""+this.loc+"\","
-														+ "logs:\""+Datastore.getInstance().getLogs()+"\","
-																+ "kvstore:"+Datastore.getInstance().findAll()+"}"	;
-    	
-		return data.getBytes();
+	@SuppressWarnings("unchecked")
+	public byte[] getData() throws IOException, ParseException, org.json.simple.parser.ParseException {
+		JSONObject map=new JSONObject();
+		map.put("hostname", SystemCmd.getHostName());
+		map.put("systemUptime", SystemCmd.uptime());
+		map.put("spaceAvailable", String.valueOf(SystemCmd.getDiskAvailableSize()));
+		map.put("averageLoads", SystemCmd.getLoad());
+		map.put("serviceUptime", String.valueOf(ManagementFactory.getRuntimeMXBean().getUptime()));
+		map.put("loc", this.loc);
+		map.put("logs", Datastore.getInstance().getLogs());
+		map.put("kvstore", Datastore.getInstance().findAll());	
+    		
+		return map.toJSONString().getBytes();
     }
 }
