@@ -59,9 +59,9 @@ public class MonitorService extends Service
 		JSONObject map=new JSONObject();
 		map.put("hostname", SystemCmd.getHostName());
 		map.put("systemUptime", SystemCmd.uptime());
-		map.put("spaceAvailable", String.valueOf(SystemCmd.getDiskAvailableSize()));
+		map.put("spaceAvailable", SystemCmd.getDiskAvailableSize());
 		map.put("averageLoads", SystemCmd.getLoad());
-		map.put("serviceUptime", String.valueOf(ManagementFactory.getRuntimeMXBean().getUptime()));
+		map.put("serviceUptime", ManagementFactory.getRuntimeMXBean().getUptime());
 		map.put("loc", this.loc);
 		map.put("logs", Datastore.getInstance().getLogs());
 		map.put("kvstore", Datastore.getInstance().findAll());	
