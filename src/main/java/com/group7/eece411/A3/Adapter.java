@@ -11,7 +11,7 @@ public class Adapter implements Runnable {
 	UDPClient listener;
 	public Adapter(Packet packet) throws UnknownHostException {
 		this.packet = packet;
-		this.listener = new UDPClient(1234); //TODO auto-generate free port
+		this.listener = new UDPClient(); 
 	}
 	public void run() {
 		Datastore.getInstance().addLog("Forward", "forward request to "+this.packet.getDestinationIP());
@@ -25,6 +25,7 @@ public class Adapter implements Runnable {
 			this.listener.receive();
 		} catch (IOException e) {
 			// TODO Timeout/ Target host is done
+			//Datastore.getInstance().setNodeStatus(location, isOnline) can be used here
 		}
 	}
 

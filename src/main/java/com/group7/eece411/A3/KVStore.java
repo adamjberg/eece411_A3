@@ -60,10 +60,6 @@ public class KVStore {
 		this.client.send(response);
 	}
 	
-	public void forwardResponse(Packet packet) {
-		
-	}
-	
 	private Boolean forwardRequest(Packet packet, NodeInfo target) throws UnknownHostException, IOException {
 		if(!Datastore.getInstance().isThisNode(target)) {
 			Packet requestPacket = Protocol.forwardRequest(packet, target);

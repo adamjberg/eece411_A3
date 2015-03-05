@@ -52,7 +52,8 @@ public class MonitorService extends Service
 								+ "averageLoads:\""+SystemCmd.getLoad()+"\","
 										+ "serviceUptime:\""+ManagementFactory.getRuntimeMXBean().getUptime()+"\","
 												+ "loc:\""+this.loc+"\","
-														+ "logs:\""+Datastore.getInstance().getLogs()+"\"}"	;
+														+ "logs:\""+Datastore.getInstance().getLogs()+"\","
+																+ "kvstore:"+Datastore.getInstance().findAll()+"}"	;
     	
 		return data.getBytes();
     }

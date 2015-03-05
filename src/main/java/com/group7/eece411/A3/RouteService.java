@@ -61,21 +61,6 @@ public class RouteService extends Service {
 			case 24:
 				this.stop();
 				break;
-			case 31: 
-				kvStore.forwardResponse(p);
-				break;
-			case 32: 
-				kvStore.forwardResponse(p);
-				break;
-			case 33: 
-				kvStore.forwardResponse(p);
-				break;
-			case 34:
-				kvStore.forwardResponse(p);
-				break;
-			case 35:
-				kvStore.forwardResponse(p);
-				break;
 			default:
 				Datastore.getInstance().addLog("UNKNOWN", "Unknown Command Code "+p.getHeader("command")[0]);
 				this.client.send(Protocol.sendResponse(p, null, 5));
