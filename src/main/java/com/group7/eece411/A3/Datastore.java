@@ -13,7 +13,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -285,8 +287,15 @@ public class Datastore {
 	
 	public ArrayList<JSONObject> getLogs() {
 		synchronized(this.logs) {
-			ArrayList<JSONObject> ret = this.logs;
-			this.logs = new ArrayList<JSONObject>();
+			ArrayList<JSONObject> ret = new ArrayList<JSONObject>();
+			ListIterator<JSONObject> itr = this.logs.listIterator();
+			while(itr.hasNext()) {
+				ret.add(itr.next());
+				itr.remove();
+				if(itr.nextIndex() >= 100) {
+					break;
+				}
+			}
 			return ret;
 		}
 	}
