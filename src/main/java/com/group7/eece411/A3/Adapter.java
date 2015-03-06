@@ -8,25 +8,44 @@ import java.util.Arrays;
 public class Adapter implements Runnable {
 
 	Packet packet;
-	UDPClient listener;
-	public Adapter(Packet packet) throws UnknownHostException {
+	Packet requestPacket;
+	NodeInfo target;
+	UDPClient client;
+
+	public Adapter(Packet packet, NodeInfo target) throws IOException {
 		this.packet = packet;
-		this.listener = new UDPClient(); 
+		this.requestPacket = Protocol.forwardRequest(packet, target);
+		this.target = target;
+		this.client = new UDPClient();
 	}
 	public void run() {
 		Datastore.getInstance().addLog("Forward", "forward request to "+this.packet.getDestinationIP());
 		try {
-			this.listener.send(this.packet);
+			this.client.send(this.requestPacket);
 		} catch (IOException ioe) {
 			Datastore.getInstance().addLog("IOException", Arrays.toString(ioe.getStackTrace()));
 		}
-		// TODO listen for reply
 		try {
-			this.listener.receive();
+			// Receive the response from the target node
+			Packet response = this.client.receiveResponse();
+
+			// Copy the old unique ID
+			Protocol.decodeUniqueId(packet.getUID(), response.getHeader());
+
+			// Set the destination to the original requester
+			response.setDestinationIP(packet.getDestinationIP());
+			response.setDestinationPort(packet.getDestinationPort());
+
+			// Store the uniqueID in the cache with the response
+			Datastore.getInstance().storeCache(packet.getUIDString(), response);
+			this.client.send(response);
+
 		} catch (IOException e) {
-			// TODO Timeout/ Target host is done
-			//Datastore.getInstance().setNodeStatus(location, isOnline) can be used here
+			// Mark the target node as down
+			Datastore.getInstance().setNodeStatus(target.getLocation(), false);
+
+			// Store the packet back in the queue to be handles again
+			Datastore.getInstance().queue(packet);
 		}
 	}
-
 }
