@@ -37,7 +37,7 @@ public class MonitorService extends Service
     public void run()
     {	
 		try {
-			System.out.println(new String(getData()));
+			//System.out.println(new String(getData()));
 			client.send(host, port, getData());
 		} catch (Exception e) {
 			Datastore.getInstance().addException("EXCEPTION", e);

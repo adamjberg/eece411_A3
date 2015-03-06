@@ -15,7 +15,7 @@ public class SyncService extends Service {
 
 	public void run() {
 		NodeInfo target = Datastore.getInstance().findRandomNode(); //find half nodes
-		Datastore.getInstance().addLog("SYNC", "PUSH "+target.getHost());
+		//Datastore.getInstance().addLog("SYNC", "PUSH "+target.getHost());
 		DatagramPacket p;
 		byte[] buffer;
 		while(true) {
@@ -24,7 +24,7 @@ public class SyncService extends Service {
 				p = this.client.receive(buffer);
 				sync(buffer);
 			} catch (IOException e) {
-				Datastore.getInstance().addException("IOException", e);
+				//Datastore.getInstance().addException("IOException", e);
 				break;
 			}
 		}

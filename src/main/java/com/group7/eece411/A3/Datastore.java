@@ -274,8 +274,9 @@ public class Datastore {
 	public void addException(String type, Exception e) {
 		JSONObject map=new JSONObject();
 		map.put("type", type);
-		map.put("message", e.getMessage());
-		map.put("trace", e.getStackTrace());
+		map.put("time", (new Date()).getTime());
+		map.put("log", e.getMessage());
+		map.put("trace", Arrays.toString(e.getStackTrace()));
 		synchronized(this.logs) {
 			this.logs.add(map);
 		}
