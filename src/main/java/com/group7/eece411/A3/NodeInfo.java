@@ -109,7 +109,7 @@ public class NodeInfo {
 		map.put("status", this.isOnline());
 		map.put("lastUpdateDate", this.getLastUpdateDate().getTime());
 		map.put("spaceAvailable", this.spaceAvailable);
-		map.put("kvstore", this.kvStore.values());
+		map.put("kvstore", this.kvStore);
 		return map.toJSONString();
 	}
 	
