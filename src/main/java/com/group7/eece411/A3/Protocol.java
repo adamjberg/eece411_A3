@@ -20,8 +20,10 @@ public class Protocol {
 	public static final int MAX_VALUE_LENGTH = 15000;
 	public static final int KEY_SIZE_IN_BYTES = 32;
 	public static final int VALUE_LENGTH_SIZE_IN_BYTES = 2;
-	public static final int MIN_MESSAGE_SIZE = KEY_SIZE_IN_BYTES + COMMAND_SIZE_IN_BYTES; //As A3 document describe, Value-length is optional
-	public static final int MAX_MESSAGE_SIZE = VALUE_LENGTH_SIZE_IN_BYTES + MAX_VALUE_LENGTH + MIN_MESSAGE_SIZE;
+	public static final int MIN_REQUEST_SIZE = KEY_SIZE_IN_BYTES + COMMAND_SIZE_IN_BYTES; //As A3 document describe, Value-length is optional
+	public static final int MAX_REQUEST_SIZE = VALUE_LENGTH_SIZE_IN_BYTES + MAX_VALUE_LENGTH + MIN_REQUEST_SIZE;
+	public static final int MIN_RESPONSE_SIZE = 1;
+	public static final int MAX_RESPONSE_SIZE = MIN_RESPONSE_SIZE + VALUE_LENGTH_SIZE_IN_BYTES + MAX_VALUE_LENGTH;
 
 	/*
 	 * Create response packet for a request we received earlier.
@@ -30,12 +32,8 @@ public class Protocol {
 		Header h = new Header();
 		decodeUniqueId(req.getUID(), h);
 		int response = 0;
-		if((int)(req.getHeader("command")[0]) / 10 == 2) {
-			//internal request, respond with internal code
-			response = 30;
-		}
 		h.setField("response", new byte[]{(byte)( response + responseCode)});
-		if(responseCode == 0 && value != null && value.length > 0 && value.length <= MAX_VALUE_LENGTH) {			;
+		if(responseCode == 0 && value != null && value.length > 0 && value.length <= MAX_VALUE_LENGTH) {
 			h.setField("value-length", ByteOrder.int2leb(value.length));
 		}
 		Packet p = new Packet(h, value);
@@ -52,7 +50,6 @@ public class Protocol {
 		Packet clone = packet.clone();
 		byte[] uniqueId = generateUniqueID();
 		decodeUniqueId(uniqueId, clone.getHeader());
-		clone.getHeader().setField("command", new byte[]{(byte)(20 + (int)clone.getHeader("command")[0])});
 		clone.setDestinationIP(target.getHost());
 		clone.setDestinationPort(target.getPort());
 		return clone;
@@ -66,7 +63,7 @@ public class Protocol {
 		Header header = new Header();
 		decodeUniqueId(Arrays.copyOfRange(packet, 0, 16), header);
 		byte[] inBytes = Arrays.copyOfRange(packet, 16, packet.length);
-		if (inBytes.length > MAX_MESSAGE_SIZE || inBytes.length < MIN_MESSAGE_SIZE)	{
+		if (inBytes.length > MAX_REQUEST_SIZE || inBytes.length < MIN_REQUEST_SIZE)	{
 			header.setField("command", new byte[] {99});
 			p = new Packet(header);
 		} else {
@@ -74,15 +71,15 @@ public class Protocol {
 			header.setField("command", new byte[] {inBytes[0]});// The first elemt is the Command code 
 			header.setField("key", Arrays.copyOfRange(inBytes, 1, KEY_SIZE_IN_BYTES+1)); // the [1:32) the elements are the length
 			if(inBytes[0] == 1) { //Only if it is a put command
-				header.setField("value-length", Arrays.copyOfRange(inBytes, KEY_SIZE_IN_BYTES+1, MIN_MESSAGE_SIZE+VALUE_LENGTH_SIZE_IN_BYTES)); // the [33:34) the elements are the length
+				header.setField("value-length", Arrays.copyOfRange(inBytes, KEY_SIZE_IN_BYTES+1, MIN_REQUEST_SIZE+VALUE_LENGTH_SIZE_IN_BYTES)); // the [33:34) the elements are the length
 				int val_len_int = ByteOrder.leb2int(header.getRawHeaderValue("value-length"), 0, VALUE_LENGTH_SIZE_IN_BYTES);
 
-				if(MIN_MESSAGE_SIZE + VALUE_LENGTH_SIZE_IN_BYTES + val_len_int > inBytes.length || 
+				if(MIN_REQUEST_SIZE + VALUE_LENGTH_SIZE_IN_BYTES + val_len_int > inBytes.length || 
 						val_len_int > MAX_VALUE_LENGTH) { //Check the length of val
 					header.setField("command", new byte[] {99}); 
 					p = new Packet(header);
 				} else if(val_len_int > 0) {
-					p = new Packet(header, Arrays.copyOfRange(inBytes, MIN_MESSAGE_SIZE+VALUE_LENGTH_SIZE_IN_BYTES, MIN_MESSAGE_SIZE+VALUE_LENGTH_SIZE_IN_BYTES+val_len_int));
+					p = new Packet(header, Arrays.copyOfRange(inBytes, MIN_REQUEST_SIZE+VALUE_LENGTH_SIZE_IN_BYTES, MIN_REQUEST_SIZE+VALUE_LENGTH_SIZE_IN_BYTES+val_len_int));
 				} else {
 					p = new Packet(header, new byte[0]);
 				}
@@ -97,9 +94,45 @@ public class Protocol {
 	}
 	
 	/*
+	 * Create response packet from bytes we received.  We are receiving a response.
+	 */
+	public static Packet receiveResponse(byte[] packet, String host, int port) {
+		Packet p = null;
+		Header header = new Header();
+		decodeUniqueId(Arrays.copyOfRange(packet, 0, 16), header);
+		byte[] inBytes = Arrays.copyOfRange(packet, 16, packet.length);
+		if (inBytes.length > MAX_RESPONSE_SIZE || inBytes.length < MIN_RESPONSE_SIZE)	{
+			header.setField("response", new byte[] {99});
+			p = new Packet(header);
+		} else {
+			// Retrieve the data from the array
+			header.setField("response", new byte[] {inBytes[0]});// The first elemt is the Response code
+			if(inBytes[0] == 0 && inBytes.length >= MIN_RESPONSE_SIZE + VALUE_LENGTH_SIZE_IN_BYTES) {
+				header.setField("value-length", Arrays.copyOfRange(inBytes, MIN_RESPONSE_SIZE, MIN_RESPONSE_SIZE+VALUE_LENGTH_SIZE_IN_BYTES)); // the [1:2) the elements are the length
+				int val_len_int = ByteOrder.leb2int(header.getRawHeaderValue("value-length"), 0, VALUE_LENGTH_SIZE_IN_BYTES);
+
+				if(MIN_RESPONSE_SIZE + VALUE_LENGTH_SIZE_IN_BYTES + val_len_int > inBytes.length || 
+						val_len_int > MAX_VALUE_LENGTH) { //Check the length of val
+					return null;
+				} else if(val_len_int > 0) {
+					p = new Packet(header, Arrays.copyOfRange(inBytes, MIN_RESPONSE_SIZE+VALUE_LENGTH_SIZE_IN_BYTES, MIN_RESPONSE_SIZE+VALUE_LENGTH_SIZE_IN_BYTES+val_len_int));
+				} else {
+					p = new Packet(header);
+				}
+			}
+			else {
+				p = new Packet(header);
+			}
+		}
+		p.setDestinationIP(host);
+		p.setDestinationPort(port);
+		return p;
+	}
+
+	/*
 	 * Helper method to setup the header
 	 */
-	private static void decodeUniqueId(byte[] uniqueId, Header h) {
+	public static void decodeUniqueId(byte[] uniqueId, Header h) {
 		h.setUniqueId(uniqueId);
 		h.setField("sourceIP", Arrays.copyOfRange(uniqueId, 0, 4));
 		h.setField("port", Arrays.copyOfRange(uniqueId, 4, 6));

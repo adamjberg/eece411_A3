@@ -93,22 +93,23 @@ public class UDPClient {
 	}
 	
 	public Packet receive() throws IOException {
-		this.createSocket();
 		byte buffer[] = new byte[16384];
-		DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-		socket.setSoTimeout(this.timeout);
-		socket.receive(packet);
+		DatagramPacket packet = receive(buffer);
 		return Protocol.receiveRequest(Arrays.copyOfRange(buffer, 0, packet.getLength()), packet.getAddress().getHostAddress(), packet.getPort());
 	}
 	
+	public Packet receiveResponse() throws IOException {
+		byte buffer[] = new byte[16384];
+		DatagramPacket packet = receive(buffer);
+		return Protocol.receiveResponse(Arrays.copyOfRange(buffer, 0, packet.getLength()), packet.getAddress().getHostAddress(), packet.getPort());
+	}
+
 	public DatagramPacket receive(byte[] buffer) throws IOException {
 		this.createSocket();
-		//byte buffer[] = new byte[16384];
 		DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 		socket.setSoTimeout(this.timeout);
 		socket.receive(packet);
 		return packet;
-		//return Protocol.receiveRequest(Arrays.copyOfRange(buffer, 0, packet.getLength()), packet.getAddress().getHostAddress(), packet.getPort());
 	}
 
 }
