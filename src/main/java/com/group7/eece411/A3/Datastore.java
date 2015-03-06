@@ -107,6 +107,10 @@ public class Datastore {
 	/*
 	 * Get the node that responsible for the key, it can be the caller node or other remote nodes
 	 */
+	public NodeInfo getResponsibleNode(byte keyByte) {
+		return getResponsibleNode(ByteOrder.ubyte2int(keyByte));
+	}
+
 	public NodeInfo getResponsibleNode(int key) {
 		List<Integer> allLocations = this.findAllActiveLocations();
 		Integer closestLocation = null;

@@ -8,12 +8,10 @@ import org.christianschenk.simplecache.SimpleCache;
 public class KVStore {
 
 	public static final long REQUEST_TIMEOUT = 5;
-	private SimpleCache<Packet> requestCache;
 	private UDPClient client;
 	
 	public KVStore(UDPClient client) {
 		this.client = client;
-		this.requestCache = new SimpleCache<Packet>(REQUEST_TIMEOUT);
 	}
 
 	public void getFrom(Packet packet, NodeInfo target) throws IOException {
@@ -62,11 +60,8 @@ public class KVStore {
 	
 	private Boolean forwardRequest(Packet packet, NodeInfo target) throws UnknownHostException, IOException {
 		if(!Datastore.getInstance().isThisNode(target)) {
-			Packet requestPacket = Protocol.forwardRequest(packet, target);
-			this.requestCache.put(requestPacket.getUIDString(), packet);
 			//create new Adapter to send requestPacket and listen for reply
-			(new Thread(new Adapter(requestPacket))).start();
-			//this.client.send(requestPacket);
+			(new Thread(new Adapter(packet, target))).start();
 			return true;
 		} return false;
 	}
