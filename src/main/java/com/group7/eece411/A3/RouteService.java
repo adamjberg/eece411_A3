@@ -11,7 +11,7 @@ public class RouteService extends Service {
 	private KVStore kvStore;
 	
 	public RouteService(int period, App app) throws UnknownHostException {
-		super(period, 41172);
+		super(period, 0);
 		this.program = app;
 		this.kvStore = new KVStore(this.client);
 	}
@@ -35,7 +35,7 @@ public class RouteService extends Service {
 	
 	private void process(Packet p) throws IOException {
 		NodeInfo target = Datastore.getInstance().getResponsibleNode(p.getHeader("key")[0]);
-		
+
 		switch (p.getHeader("command")[0]) {
 			case 1: 
 				kvStore.putIn(p, target);
@@ -46,8 +46,10 @@ public class RouteService extends Service {
 			case 3: 
 				kvStore.removeFrom(p, target);
 				break;
-			case 4: 
+			case 4:
+				this.client.send(Protocol.sendResponse(p, null, 0));
 				this.program.terminate();
+				System.exit(0);
 				break;
 			case 21: 
 				kvStore.putIn(p, target);
