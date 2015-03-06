@@ -182,8 +182,8 @@ public class Datastore {
 	}
 	
 	private boolean isNodeInfoMine(NodeInfo nodeInfo)
-			throws UnknownHostException {
-		boolean isMyHostname = InetAddress.getLocalHost().getHostName()
+			throws IOException {
+		boolean isMyHostname = SystemCmd.getHostName()
 				.toLowerCase().equals(nodeInfo.getHost().toLowerCase())
 				|| nodeInfo.getHost().equals("127.0.0.1");
 		return isMyHostname && isPortFree(nodeInfo.getPort());

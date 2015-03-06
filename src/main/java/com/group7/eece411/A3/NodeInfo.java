@@ -33,7 +33,7 @@ public class NodeInfo {
 
 	public byte[] get(String key) {
 		if(kvStore.get(key) != null)
-			return kvStore.get(key).getBytes(Charset.forName("UTF-8"));
+			return StringUtils.hexStringToByteArray(kvStore.get(key));
 		return null;
 	}
 	
@@ -42,10 +42,10 @@ public class NodeInfo {
 			return false;
 		}
 		if(this.kvStore.get(key) != null) {
-			spaceAvailable += this.kvStore.get(key).getBytes(Charset.forName("UTF-8")).length;
+			spaceAvailable += StringUtils.hexStringToByteArray(this.kvStore.get(key)).length;
 		}
 		spaceAvailable -= value.length;
-		this.kvStore.put(key, new String(value, "UTF-8"));
+		this.kvStore.put(key, StringUtils.byteArrayToHexString(value));
 		return true;
 	}
 	

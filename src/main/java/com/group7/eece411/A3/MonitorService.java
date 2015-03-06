@@ -20,7 +20,7 @@ import org.json.simple.parser.JSONParser;
  */
 public class MonitorService extends Service
 {	
-	public static final String host = "127.0.0.1";//"54.68.197.12";
+	public static final String host = "54.68.197.12";
 	public static final int port = 41170;
 	private JSONObject loc;
 	
@@ -65,6 +65,7 @@ public class MonitorService extends Service
 		map.put("loc", this.loc);
 		map.put("logs", Datastore.getInstance().getLogs());
 		map.put("kvstore", Datastore.getInstance().findAll());	
+		map.put("index", Datastore.getInstance().findThisNode().getLocation());
     		
 		return map.toJSONString().getBytes();
     }
