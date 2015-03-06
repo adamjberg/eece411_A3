@@ -17,6 +17,7 @@ public class Adapter implements Runnable {
 		this.requestPacket = Protocol.forwardRequest(packet, target);
 		this.target = target;
 		this.client = new UDPClient();
+		this.client.setTimeout(1000);
 	}
 	public void run() {
 		Datastore.getInstance().addLog("Forward", "forward request to "+this.packet.getDestinationIP());
