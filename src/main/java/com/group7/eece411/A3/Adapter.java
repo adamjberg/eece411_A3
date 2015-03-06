@@ -41,6 +41,7 @@ public class Adapter implements Runnable {
 			this.client.send(response);
 
 		} catch (IOException e) {
+			Datastore.getInstance().addException("IOException", e);
 			// Mark the target node as down
 			Datastore.getInstance().setNodeStatus(target.getLocation(), false);
 
