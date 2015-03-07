@@ -153,7 +153,7 @@ public class Datastore {
 			while ((line = reader.readLine()) != null) {
 				String[] lineArray = line.split(":");
 				if (lineArray.length != 3) {
-					System.out.println("Invalid Line Found!");
+					this.addLog("ERROR","Invalid Line Found!");
 				} else {
 					NodeInfo n = new NodeInfo(lineArray[0],
 							Integer.valueOf(lineArray[1]),
@@ -162,7 +162,7 @@ public class Datastore {
 					n.setOnline(true);
 					
 					if (self == null && isNodeInfoMine(n)) {
-						System.out.println("Start machine : "+n.getHost()+" with location "+n.getLocation());
+						this.addLog("INFO", "Start machine : "+n.getHost()+" with location "+n.getLocation());
 						this.self = n.getLocation();
 					} 
 					if (n.getLocation() < CIRCLE_SIZE && n.getLocation() >= 0) {
