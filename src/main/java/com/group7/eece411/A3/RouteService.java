@@ -63,6 +63,10 @@ public class RouteService extends Service {
 			case 24:
 				this.stop();
 				break;
+			case 99:
+				Datastore.getInstance().addLog("ERROR", "Error value length "+ByteOrder.leb2int(p.getHeader("value-length"), 0));
+				this.client.send(Protocol.sendResponse(p, null, 4));
+				break;
 			default:
 				Datastore.getInstance().addLog("UNKNOWN", "Unknown Command Code "+p.getHeader("command")[0]);
 				this.client.send(Protocol.sendResponse(p, null, 5));
