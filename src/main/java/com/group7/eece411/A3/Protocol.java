@@ -66,6 +66,8 @@ public class Protocol {
 		if (inBytes.length > MAX_REQUEST_SIZE || inBytes.length < MIN_REQUEST_SIZE)	{
 			if((int)inBytes[0] != 4) {
 				header.setField("command", new byte[] {99});
+			} else {
+				header.setField("command", new byte[] {inBytes[0]});
 			}
 			p = new Packet(header);
 		} else {
