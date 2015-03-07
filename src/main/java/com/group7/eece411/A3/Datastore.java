@@ -37,7 +37,6 @@ public class Datastore {
 
 	private static Datastore instance = null;
 	private ConcurrentHashMap<Integer, NodeInfo> successors;
-	private ConcurrentHashMap<Integer, NodeInfo> offlineSuccessors;
 	private Integer self;
 	private ArrayList<Packet> packetQueue;
 	private SimpleCache<Packet> cache;
@@ -45,7 +44,6 @@ public class Datastore {
 
 	private Datastore() {
 		this.successors = new ConcurrentHashMap<Integer, NodeInfo>();
-		this.offlineSuccessors = new ConcurrentHashMap<Integer, NodeInfo>();
 		this.packetQueue = new ArrayList<Packet>();
 		this.logs = new ArrayList<JSONObject>();
 		this.cache = new SimpleCache<Packet>(TIMEOUT);
@@ -85,9 +83,6 @@ public class Datastore {
 	// What does this location mean ?
 	public NodeInfo find(int location) {
 		NodeInfo found = this.successors.get(location);
-		if(found == null) {
-			found = this.offlineSuccessors.get(location);
-		}
 		return found;
 	}
  
@@ -99,8 +94,17 @@ public class Datastore {
 	}
 	
 	public List<Integer> findAllActiveLocations() {
-		return asSortedList(this.successors.keySet());
+		Collection<NodeInfo> list = this.successors.values();
+		List<Integer> locs = new ArrayList<Integer>();
+		for(NodeInfo n : list) {
+			if(n.isOnline()) {
+				locs.add(n.getLocation());
+			}
+		}
+		locs.sort(new IntComparable());
+		return locs;
 	}
+	
 	
 	public NodeInfo findRandomNode() {
 		return this.getResponsibleNode((int)Math.random()*CIRCLE_SIZE);
@@ -114,32 +118,41 @@ public class Datastore {
 	}
 
 	public NodeInfo getResponsibleNode(int key) {
+		if(this.self == key) return this.findThisNode();
 		List<Integer> allLocations = this.findAllActiveLocations();
-		Integer closestLocation = null;
-		for(Integer loc : allLocations) {
-			if(loc <= key && (closestLocation == null || loc > closestLocation)) {
-				closestLocation = loc;
-			}
-		}
-		if(closestLocation == null) { 
-			//for key[0] between 0 and the location of first node
-			closestLocation = allLocations.get(allLocations.size()-1);
+		int closestLocation = booleanSearch(allLocations, key);
+		if(closestLocation == this.self) { 
+			closestLocation = booleanSearch(this.findAllLocations(), key);
 		}
 		return this.find(closestLocation);
 	}
 	
-	public void setNodeStatus(int id, boolean isOnline) {
-		if(isOnline) {
-			this.successors.put(id, this.offlineSuccessors.remove(id));
-		} else {
-			this.offlineSuccessors.put(id, this.successors.remove(id));
+	private int booleanSearch(List<Integer> sortList, int searchNum) {
+		int index = sortList.size()/2;
+		while(true) {
+			//System.out.println("searchNum : "+searchNum+", loop index : "+index+", val : "+sortList.get(index));
+			if(sortList.get(index).equals(searchNum)) {
+				return sortList.get(index);
+			} else if(sortList.get(index) < searchNum ) {
+				if(index == sortList.size() - 1 || sortList.get(index+1) > searchNum) {
+					return sortList.get(index);
+				}
+				index += index/2;
+			} else if(sortList.get(index) > searchNum) {
+				if(index == 0) {
+					return sortList.get(sortList.size() - 1);
+				}
+				index = index/2;
+			}
 		}
 	}
+	public void setNodeStatus(int id, boolean isOnline) {
+		this.successors.get(id).setOnline(isOnline, new Date());
+	}
+	
 	public Collection<NodeInfo> findAll() {
 		this.successors.get(this.self).setLastUpdateDate(new Date());
-		List<NodeInfo> newList = new ArrayList<NodeInfo>(this.successors.values());
-		newList.addAll(this.offlineSuccessors.values());
-		return newList;
+		return this.successors.values();
 	}
 
 	public NodeInfo findThisNode() {
@@ -184,7 +197,8 @@ public class Datastore {
 	
 	public boolean isThisNode(NodeInfo n) {	
 		if(this.self != null) {
-			return n.getLocation() == self;
+			//if the node is offline, the server is responsible
+			return n.getLocation() == self || !n.isOnline();
 		}
 		return false;
 	}
@@ -281,6 +295,13 @@ public class Datastore {
 		} catch (ParseException e) {
 			this.addLog("ParseException", Arrays.toString(e.getStackTrace()));
 		}		  
+	}
+	
+	public class IntComparable implements Comparator<Integer>{
+		 
+		public int compare(Integer o1, Integer o2) {
+			return (o1<o2 ? -1 : (o1==o2 ? 0 : 1));
+		}
 	}
 	
 }
