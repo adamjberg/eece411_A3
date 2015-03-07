@@ -20,7 +20,7 @@ public class Adapter implements Runnable {
 		this.client.setTimeout(200);
 	}
 	public void run() {
-		Datastore.getInstance().addLog("Forward", "forward request to "+this.packet.getDestinationIP());
+		Datastore.getInstance().addLog("Forward", "forward request to "+this.requestPacket.getDestinationIP());
 		int count = 3;
 		while(count > 0) {
 			try {
