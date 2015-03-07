@@ -64,7 +64,9 @@ public class Protocol {
 		decodeUniqueId(Arrays.copyOfRange(packet, 0, 16), header);
 		byte[] inBytes = Arrays.copyOfRange(packet, 16, packet.length);
 		if (inBytes.length > MAX_REQUEST_SIZE || inBytes.length < MIN_REQUEST_SIZE)	{
-			header.setField("command", new byte[] {99});
+			if((int)inBytes[0] != 4) {
+				header.setField("command", new byte[] {99});
+			}
 			p = new Packet(header);
 		} else {
 			// Retrieve the data from the array

@@ -34,8 +34,10 @@ public class RouteService extends Service {
     }
 	
 	private void process(Packet p) throws IOException {
-		NodeInfo target = Datastore.getInstance().getResponsibleNode(p.getHeader("key")[0]);
-
+		NodeInfo target = null;
+		if(p.getHeader("key") != null) {
+			target = Datastore.getInstance().getResponsibleNode(p.getHeader("key")[0]);
+		}
 		switch (ByteOrder.ubyte2int(p.getHeader("command")[0])) {
 			case 1: 
 				kvStore.putIn(p, target);
