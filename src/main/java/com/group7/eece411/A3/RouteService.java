@@ -36,7 +36,7 @@ public class RouteService extends Service {
 	private void process(Packet p) throws IOException {
 		NodeInfo target = Datastore.getInstance().getResponsibleNode(p.getHeader("key")[0]);
 
-		switch (p.getHeader("command")[0]) {
+		switch (ByteOrder.ubyte2int(p.getHeader("command")[0])) {
 			case 1: 
 				kvStore.putIn(p, target);
 				break;
@@ -64,7 +64,7 @@ public class RouteService extends Service {
 				this.stop();
 				break;
 			case 99:
-				Datastore.getInstance().addLog("ERROR", "Error value length "+ByteOrder.leb2int(p.getHeader("value-length"), 0));
+				Datastore.getInstance().addLog("ERROR", "Error value length "+ByteOrder.leb2int(p.getHeader("value-length"), 2));
 				this.client.send(Protocol.sendResponse(p, null, 4));
 				break;
 			default:
