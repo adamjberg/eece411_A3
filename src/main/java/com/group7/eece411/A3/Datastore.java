@@ -137,7 +137,9 @@ public class Datastore {
 	}
 	public Collection<NodeInfo> findAll() {
 		this.successors.get(this.self).setLastUpdateDate(new Date());
-		return this.successors.values();
+		List<NodeInfo> newList = new ArrayList<NodeInfo>(this.successors.values());
+		newList.addAll(this.offlineSuccessors.values());
+		return newList;
 	}
 
 	public NodeInfo findThisNode() {
@@ -209,41 +211,6 @@ public class Datastore {
 			}
 		}
 		return portFree;
-	}
-
-	/*
-	 * Copy the NodeInfo into the locations from the last real node To the
-	 * location of the node. This allows constant time access for finding a
-	 * node.
-	 */
-	private void fillEmptyLocations() {
-		boolean done = false;
-		int position = CIRCLE_SIZE - 1;
-		NodeInfo nodeToCopy = null;
-		int validNodeCount = 0;
-		int emptyNodeCount = 0;
-		while (done == false) {
-			if (successors.get(position) != null) {
-				nodeToCopy = successors.get(position);
-				validNodeCount++;
-			} else {
-				if (nodeToCopy != null) {
-					successors.put(position, nodeToCopy);
-				}
-				emptyNodeCount++;
-			}
-			position--;
-			if (position < 0) {
-				position = CIRCLE_SIZE - 1;
-				if (validNodeCount >= CIRCLE_SIZE
-						|| emptyNodeCount >= CIRCLE_SIZE) {
-					done = true;
-				} else {
-					validNodeCount = 0;
-					emptyNodeCount = 0;
-				}
-			}
-		}
 	}
 	
 	private List<Integer> asSortedList(Set<Integer> c) {

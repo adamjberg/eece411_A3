@@ -48,7 +48,7 @@ public class App {
 				if( cachePacket == null) {
 					this.db.queue(p);
 				} else {
-					this.db.addLog("DEBUG", "Cache found.");
+					this.db.addLog("DEBUG", "Cache found. Reply immedately.");
 					this.listener.send(cachePacket);
 				}
 				
