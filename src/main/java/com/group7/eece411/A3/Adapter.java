@@ -17,7 +17,6 @@ public class Adapter implements Runnable {
 		this.requestPacket = Protocol.forwardRequest(packet, target);
 		this.target = target;
 		this.client = new UDPClient();
-		this.client.setTimeout(200);
 	}
 	public void run() {
 		Datastore.getInstance().addLog("Forward", "forward request to "+this.requestPacket.getDestinationIP());
@@ -45,7 +44,7 @@ public class Adapter implements Runnable {
 				break;	
 			} catch (IOException e) {
 				count--;
-				Datastore.getInstance().addLog("Timeout", "Retrying..");
+				Datastore.getInstance().addLog("Timeout", "Retry sending request to "+target.getHost());
 				this.client.setTimeout(this.client.getTimeout()*2);
 				if(count <= 0) {
 					Datastore.getInstance().addLog("Timeout", target.getHost() + " is unreachable.");

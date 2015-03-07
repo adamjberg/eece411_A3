@@ -61,6 +61,7 @@ public class Datastore {
 
 	public void queue(Packet p) {
 		synchronized(this.packetQueue) {
+			this.addLog("QUEUE", p.toString());
 			this.packetQueue.add(p);
 		}
 	}
@@ -76,7 +77,9 @@ public class Datastore {
 		        return p1.getDate().compareTo(p2.getDate());
 		    }
 		});
-		
+		if(clone.size() > 0) {
+			this.addLog("POLL", Arrays.toString(clone.toArray()));
+		}
 		return clone;
 	}
 	
@@ -107,9 +110,9 @@ public class Datastore {
 	
 	
 	public NodeInfo findRandomNode() {
-		return this.getResponsibleNode((int)Math.random()*CIRCLE_SIZE);
+		return this.getResponsibleNode((int)(Math.random()*CIRCLE_SIZE));
 	}
-	
+	 
 	/*
 	 * Get the node that responsible for the key, it can be the caller node or other remote nodes
 	 */
@@ -118,31 +121,37 @@ public class Datastore {
 	}
 
 	public NodeInfo getResponsibleNode(int key) {
+		//System.out.println("key : "+key);
 		if(this.self == key) return this.findThisNode();
 		List<Integer> allLocations = this.findAllActiveLocations();
 		int closestLocation = booleanSearch(allLocations, key);
 		if(closestLocation == this.self) { 
 			closestLocation = booleanSearch(this.findAllLocations(), key);
 		}
+		//System.out.println("find location "+closestLocation);
 		return this.find(closestLocation);
 	}
 	
 	private int booleanSearch(List<Integer> sortList, int searchNum) {
 		int index = sortList.size()/2;
+		int prev = sortList.size()-1;		
+		//System.out.println(Arrays.toString(sortList.toArray()));
 		while(true) {
-			//System.out.println("searchNum : "+searchNum+", loop index : "+index+", val : "+sortList.get(index));
-			if(sortList.get(index).equals(searchNum)) {
+			int diff = (int) Math.ceil(Math.abs(prev - index)/2.0);
+			//System.out.println("diff :"+diff+", prev : "+prev+", searchNum : "+searchNum+", index : "+index+", location : "+sortList.get(index));
+			prev = index;
+			if(sortList.get(index).equals(searchNum) || diff == 0) {
 				return sortList.get(index);
 			} else if(sortList.get(index) < searchNum ) {
 				if(index == sortList.size() - 1 || sortList.get(index+1) > searchNum) {
 					return sortList.get(index);
 				}
-				index += index/2;
+				index += diff;
 			} else if(sortList.get(index) > searchNum) {
 				if(index == 0) {
 					return sortList.get(sortList.size() - 1);
 				}
-				index = index/2;
+				index -= diff;
 			}
 		}
 	}

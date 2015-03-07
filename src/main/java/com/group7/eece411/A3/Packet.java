@@ -32,7 +32,7 @@ public class Packet {
 	public byte[] getPayload() {
 		return this.payload;
 	}
-	
+	 
 	public Header getHeader() {
 		return this.header;
 	}

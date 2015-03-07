@@ -5,7 +5,7 @@ import javax.xml.bind.DatatypeConverter;
 /**
  * Various static routines to help with strings
  */
-public class StringUtils {
+public class StringUtils { 
 
 	public static String byteArrayToHexString(byte[] bytes) {
 		return DatatypeConverter.printHexBinary(bytes);

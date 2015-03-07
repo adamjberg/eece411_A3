@@ -14,7 +14,7 @@ public class SyncService extends Service {
 	}
 
 	public void run() {
-		NodeInfo target = Datastore.getInstance().findRandomNode(); //find half nodes
+		//NodeInfo target = Datastore.getInstance().findRandomNode(); //find half nodes
 		//Datastore.getInstance().addLog("SYNC", "PUSH "+target.getHost());
 		DatagramPacket p;
 		byte[] buffer;

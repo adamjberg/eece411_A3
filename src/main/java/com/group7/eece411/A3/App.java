@@ -6,8 +6,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 public class App {
-	private UDPClient listener;
-	private Datastore db;
+	private UDPClient listener; 
+	private Datastore db; 
 	private NodeInfo thisNode;
 	private HashMap<String, Service> services;
 
@@ -43,7 +43,6 @@ public class App {
 		do {
 			try{
 				p = this.listener.receive(); 
-				
 				Packet cachePacket = this.db.getCache(p.getUIDString());
 				if( cachePacket == null) {
 					this.db.queue(p);

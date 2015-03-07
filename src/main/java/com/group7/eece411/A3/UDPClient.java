@@ -83,7 +83,7 @@ public class UDPClient {
 	}
 	
 	public void send(String host, int port, byte[] data) throws IOException {
-		if (host == null || data == null) {
+		if (host == null || data == null) { 
 			throw new IllegalArgumentException();
 		}
 		this.createSocket();

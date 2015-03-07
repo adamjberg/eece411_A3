@@ -19,7 +19,7 @@ public class SystemCmd {
 	
 	public static String uptime() throws IOException, ParseException {
 		BufferedReader in;
-		String line;
+		String line; 
 		if(SystemCmd.OS.contains("win")) { //Windows
 			in = getBufferedReaderFromCmd("net stats srv");
 			while((line = in.readLine()) != null) {

@@ -39,7 +39,6 @@ public class Protocol {
 		Packet p = new Packet(h, value);
 		p.setDestinationIP(req.getDestinationIP());
 		p.setDestinationPort(req.getDestinationPort());
-		Datastore.getInstance().addLog("DEBUG", p.toString());
 		return p;
 	}
 	
