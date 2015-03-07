@@ -45,9 +45,10 @@ public class Adapter implements Runnable {
 				break;	
 			} catch (IOException e) {
 				count--;
-				Datastore.getInstance().addException("Timeout", e);
+				Datastore.getInstance().addLog("Timeout", "Retrying..");
 				this.client.setTimeout(this.client.getTimeout()*2);
 				if(count <= 0) {
+					Datastore.getInstance().addLog("Timeout", target.getHost() + " is unreachable.");
 					// Mark the target node as down
 					Datastore.getInstance().setNodeStatus(target.getLocation(), false);
 		
