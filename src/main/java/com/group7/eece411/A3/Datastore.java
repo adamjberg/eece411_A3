@@ -117,7 +117,7 @@ public class Datastore {
 		List<Integer> allLocations = this.findAllActiveLocations();
 		Integer closestLocation = null;
 		for(Integer loc : allLocations) {
-			if(loc < key && (closestLocation == null || loc > closestLocation)) {
+			if(loc <= key && (closestLocation == null || loc > closestLocation)) {
 				closestLocation = loc;
 			}
 		}
