@@ -22,7 +22,11 @@ public class RouteService extends Service {
 			for(Packet task : tasklist) {
 				Datastore.getInstance().addLog("RECEIVE", task.toString());
 				try {
-					process(task);
+					if(Datastore.getInstance().getProcessCache(task.getUIDString()) == null || !Datastore.getInstance().getProcessCache(task.getUIDString())) { 
+						Datastore.getInstance().storeProcessCache(task.getUIDString(), true);
+						//make sure we only process once
+						process(task);
+					}
 				} catch(IOException ioe) {
 					Datastore.getInstance().addLog("KVStore Error", Arrays.toString(ioe.getStackTrace()));
 					this.client.send(Protocol.sendResponse(task, null, 4));

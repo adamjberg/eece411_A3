@@ -17,9 +17,9 @@ public class App {
 			App app = new App();
 			app.run();
 		} catch(IOException ex) {
-			System.out.println(ex.toString());
+			ex.printStackTrace();
 		} catch(Exception e) {
-			System.out.println(e.toString());
+			e.printStackTrace();
 		}
 	}
 

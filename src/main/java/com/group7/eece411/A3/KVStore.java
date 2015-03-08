@@ -26,6 +26,7 @@ public class KVStore {
 			response = Protocol.sendResponse(packet, target.get(packet.getStringHeader("key")), 0);
 		}
 		Datastore.getInstance().storeCache(packet.getUIDString(), response);
+		Datastore.getInstance().storeProcessCache(packet.getUIDString(), false);
 		this.client.send(response);
 	}
 	
@@ -40,6 +41,7 @@ public class KVStore {
 			response = Protocol.sendResponse(packet, null, 0);				
 		}
 		Datastore.getInstance().storeCache(packet.getUIDString(), response);
+		Datastore.getInstance().storeProcessCache(packet.getUIDString(), false);
 		this.client.send(response);
 	}
 	
@@ -55,6 +57,7 @@ public class KVStore {
 			response = Protocol.sendResponse(packet, null, 1);
 		}
 		Datastore.getInstance().storeCache(packet.getUIDString(), response);
+		Datastore.getInstance().storeProcessCache(packet.getUIDString(), false);
 		this.client.send(response);
 	}
 	

@@ -34,12 +34,14 @@ import org.json.simple.parser.ParseException;
 public class Datastore {
 	public static int CIRCLE_SIZE = 256;
 	public static final long TIMEOUT = 30;
+	public static final long PROCESS_TIMEOUT = 5;
 
 	private static Datastore instance = null;
 	private ConcurrentHashMap<Integer, NodeInfo> successors;
 	private Integer self;
 	private ArrayList<Packet> packetQueue;
 	private SimpleCache<Packet> cache;
+	private SimpleCache<Boolean> processCache;
 	private ArrayList<JSONObject> logs;
 
 	private Datastore() {
@@ -47,6 +49,7 @@ public class Datastore {
 		this.packetQueue = new ArrayList<Packet>();
 		this.logs = new ArrayList<JSONObject>();
 		this.cache = new SimpleCache<Packet>(TIMEOUT);
+		this.processCache = new SimpleCache<Boolean>(PROCESS_TIMEOUT);
 		setupNodes();
 	}
 
@@ -61,7 +64,6 @@ public class Datastore {
 
 	public void queue(Packet p) {
 		synchronized(this.packetQueue) {
-			this.addLog("QUEUE", p.toString());
 			this.packetQueue.add(p);
 		}
 	}
@@ -77,9 +79,6 @@ public class Datastore {
 		        return p1.getDate().compareTo(p2.getDate());
 		    }
 		});
-		if(clone.size() > 0) {
-			this.addLog("POLL", Arrays.toString(clone.toArray()));
-		}
 		return clone;
 	}
 	
@@ -195,11 +194,11 @@ public class Datastore {
 				}
 			}
 		} catch (NumberFormatException e) {
-			this.addLog("EXCEPTION", Arrays.toString(e.getStackTrace()));
+			this.addLog("NumberFormatException", Arrays.toString(e.getStackTrace()));
 		} catch (UnknownHostException e) {
-			this.addLog("EXCEPTION", Arrays.toString(e.getStackTrace()));
+			this.addLog("UnknownHostException", Arrays.toString(e.getStackTrace()));
 		} catch (IOException e) {
-			this.addLog("EXCEPTION", Arrays.toString(e.getStackTrace()));
+			this.addLog("IOException", Arrays.toString(e.getStackTrace()));
 		}
 		//fillEmptyLocations();
 	}
@@ -243,11 +242,27 @@ public class Datastore {
 	}
 
 	public Packet getCache(String uid) {
-		return this.cache.get(uid);
+		synchronized(this.cache) {
+			return this.cache.get(uid);
+		}
 	}
 
 	public void storeCache(String uid, Packet packet) {
-		this.cache.put(uid, packet);
+		synchronized(this.cache) {
+			this.cache.put(uid, packet);
+		}
+	}	
+	
+	public Boolean getProcessCache(String uid) {
+		synchronized(this.processCache) {
+			return this.processCache.get(uid);		
+		}
+	}
+	
+	public void storeProcessCache(String uid, boolean val) {
+		synchronized(this.processCache) {
+			this.processCache.put(uid, new Boolean(val));
+		}
 	}	
 	
 	@SuppressWarnings("unchecked")
@@ -259,7 +274,7 @@ public class Datastore {
 		synchronized(this.logs) {
 			this.logs.add(map);
 		}
-		System.out.println(map.toJSONString());
+		//System.out.println(map.toJSONString());
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -272,7 +287,7 @@ public class Datastore {
 		synchronized(this.logs) {
 			this.logs.add(map);
 		}
-		System.out.println(map.toJSONString());
+		//System.out.println(map.toJSONString());
 	}
 	
 	public ArrayList<JSONObject> getLogs() {

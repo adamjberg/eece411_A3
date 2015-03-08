@@ -51,14 +51,13 @@ public class SystemCmd {
 	}
 	 
 	public static long getDiskAvailableSize() throws IOException {
-		for (Path root : FileSystems.getDefault().getRootDirectories())	{
-		    try {
-		    	return Files.getFileStore(root).getUsableSpace()/1024/1024;
-		    } catch (FileSystemException e) {
-		    	System.out.println(e.getMessage());
-		    	return -1;
-		    }
-		}
+	    try {
+			for (Path root : FileSystems.getDefault().getRootDirectories())	{
+			    return Files.getFileStore(root).getUsableSpace()/1024/1024;
+			}
+	    } catch (FileSystemException e) {
+	    	return -1;
+	    }
 		return -1;
 	}
 	

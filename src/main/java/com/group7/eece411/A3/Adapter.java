@@ -38,8 +38,9 @@ public class Adapter implements Runnable {
 				response.setDestinationIP(packet.getDestinationIP());
 				response.setDestinationPort(packet.getDestinationPort());
 	
-				// Store the uniqueID in the cache with the response
+				// Store the uniqueID in the cache with the response 
 				Datastore.getInstance().storeCache(packet.getUIDString(), response);
+				Datastore.getInstance().storeProcessCache(packet.getUIDString(), false);
 				this.client.send(response);
 				break;	
 			} catch (IOException e) {
@@ -50,7 +51,7 @@ public class Adapter implements Runnable {
 					Datastore.getInstance().addLog("Timeout", target.getHost() + " is unreachable.");
 					// Mark the target node as down
 					Datastore.getInstance().setNodeStatus(target.getLocation(), false);
-		
+					Datastore.getInstance().storeProcessCache(packet.getUIDString(), false);
 					// Store the packet back in the queue to be handles again
 					Datastore.getInstance().queue(packet);
 				}
