@@ -30,18 +30,18 @@ public class Adapter implements Runnable {
 			try {
 				// Receive the response from the target node
 				Packet response = this.client.receiveResponse();
-	
+				Datastore.getInstance().addLog("Receive", response.toString());
 				// Copy the old unique ID
 				Protocol.decodeUniqueId(packet.getUID(), response.getHeader());
 	
 				// Set the destination to the original requester
 				response.setDestinationIP(packet.getDestinationIP());
 				response.setDestinationPort(packet.getDestinationPort());
-	
+
+				this.client.send(response);
 				// Store the uniqueID in the cache with the response 
 				Datastore.getInstance().storeCache(packet.getUIDString(), response);
 				Datastore.getInstance().storeProcessCache(packet.getUIDString(), false);
-				this.client.send(response);
 				break;	
 			} catch (IOException e) {
 				count--;
@@ -57,5 +57,6 @@ public class Adapter implements Runnable {
 				}
 			}
 		}
+		target.update();
 	}
 }

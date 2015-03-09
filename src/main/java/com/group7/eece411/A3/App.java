@@ -43,14 +43,7 @@ public class App {
 		do {
 			try{
 				p = this.listener.receive(); 
-				Packet cachePacket = this.db.getCache(p.getUIDString());
-				if( cachePacket == null) {
-					this.db.queue(p);
-				} else {
-					this.db.addLog("DEBUG", "Cache found. Reply immedately.");
-					this.listener.send(cachePacket);
-				}
-				
+				this.db.queue(p);				
 			}  catch(Exception e) {
 				Datastore.getInstance().addLog("EXCEPTION", Arrays.toString(e.getStackTrace()));	
     		}

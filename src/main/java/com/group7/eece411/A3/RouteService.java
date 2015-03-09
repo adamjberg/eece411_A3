@@ -25,7 +25,13 @@ public class RouteService extends Service {
 					if(Datastore.getInstance().getProcessCache(task.getUIDString()) == null || !Datastore.getInstance().getProcessCache(task.getUIDString())) { 
 						Datastore.getInstance().storeProcessCache(task.getUIDString(), true);
 						//make sure we only process once
-						process(task);
+						Packet cachePacket = Datastore.getInstance().getCache(task.getUIDString());
+						if(cachePacket != null) {
+							this.client.send(cachePacket);
+							Datastore.getInstance().addLog("Cache", "Cache found. Reply immedately.");
+						} else {
+							process(task);
+						}
 					}
 				} catch(IOException ioe) {
 					Datastore.getInstance().addLog("KVStore Error", Arrays.toString(ioe.getStackTrace()));

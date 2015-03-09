@@ -100,6 +100,9 @@ public class NodeInfo {
 		this.lastUpdateDate = lastUpdateDate;
 	}
 	
+	public void update() {
+		this.lastUpdateDate = new Date();
+	}
 	@SuppressWarnings("unchecked")
 	public String toString() {
 		JSONObject map=new JSONObject();
