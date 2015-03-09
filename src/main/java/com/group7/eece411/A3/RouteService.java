@@ -22,16 +22,14 @@ public class RouteService extends Service {
 			for(Packet task : tasklist) {
 				Datastore.getInstance().addLog("RECEIVE", task.toString());
 				try {
-					if(Datastore.getInstance().getProcessCache(task.getUIDString()) == null || !Datastore.getInstance().getProcessCache(task.getUIDString())) { 
+					Packet cachePacket = Datastore.getInstance().getCache(task.getUIDString());
+					if(cachePacket != null) {
+						this.client.send(cachePacket);
+						Datastore.getInstance().addLog("Cache", "Cache found. Reply immedately.");
+					} else if(Datastore.getInstance().getProcessCache(task.getUIDString()) == null || !Datastore.getInstance().getProcessCache(task.getUIDString())) { 
 						Datastore.getInstance().storeProcessCache(task.getUIDString(), true);
 						//make sure we only process once
-						Packet cachePacket = Datastore.getInstance().getCache(task.getUIDString());
-						if(cachePacket != null) {
-							this.client.send(cachePacket);
-							Datastore.getInstance().addLog("Cache", "Cache found. Reply immedately.");
-						} else {
-							process(task);
-						}
+						process(task);
 					}
 				} catch(IOException ioe) {
 					Datastore.getInstance().addLog("KVStore Error", Arrays.toString(ioe.getStackTrace()));
