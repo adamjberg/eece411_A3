@@ -25,7 +25,7 @@ public class RouteService extends Service {
 				try {
 					Packet cachePacket = Datastore.getInstance().getCache(task.getUIDString());
 					if(cachePacket != null) {
-						this.client.send(cachePacket);
+						this.client.responseCache(task, cachePacket);
 						Datastore.getInstance().addLog("Cache", "Cache found. Reply immedately.");
 					} else if(Datastore.getInstance().getProcessCache(task.getUIDString()) == null || Datastore.getInstance().getProcessCache(task.getUIDString()).equals(false)) { 
 						Datastore.getInstance().storeProcessCache(task.getUIDString(), true);

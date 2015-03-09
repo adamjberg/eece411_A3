@@ -64,6 +64,11 @@ public class UDPClient {
 		}
 	}
 
+	public void responseCache(Packet receivePacket, Packet cachePacket) throws IOException {
+		cachePacket.setDestinationIP(receivePacket.getDestinationIP());
+		cachePacket.setDestinationPort(receivePacket.getDestinationPort());
+		this.send(cachePacket);
+	}
 	public void responseTo(Packet cachePacket, Packet sendPacket) throws IOException {
 		this.send(sendPacket);
 		Datastore.getInstance().storeCache(cachePacket.getUIDString(), sendPacket);
