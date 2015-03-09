@@ -291,13 +291,15 @@ public class Datastore {
 	}
 	
 	public ArrayList<JSONObject> getLogs() {
+		int count = 0;
+		ArrayList<JSONObject> ret = new ArrayList<JSONObject>();
 		synchronized(this.logs) {
-			ArrayList<JSONObject> ret = new ArrayList<JSONObject>();
 			ListIterator<JSONObject> itr = this.logs.listIterator();
 			while(itr.hasNext()) {
 				ret.add(itr.next());
 				itr.remove();
-				if(itr.nextIndex() >= 100) {
+				count++;
+				if(count >= 50) {
 					break;
 				}
 			}
