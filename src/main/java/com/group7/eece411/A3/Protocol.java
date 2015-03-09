@@ -49,6 +49,8 @@ public class Protocol {
 		Packet clone = packet.clone();
 		byte[] uniqueId = generateUniqueID();
 		decodeUniqueId(uniqueId, clone.getHeader());
+		int forwardCommand = (ByteOrder.ubyte2int(packet.getHeader("command")[0]) + 20);
+		clone.getHeader().setField("command", new byte[]{(byte)forwardCommand});
 		clone.setDestinationIP(target.getHost());
 		clone.setDestinationPort(target.getPort());
 		return clone;
@@ -73,7 +75,7 @@ public class Protocol {
 			// Retrieve the data from the array
 			header.setField("command", new byte[] {inBytes[0]});// The first elemt is the Command code 
 			header.setField("key", Arrays.copyOfRange(inBytes, 1, KEY_SIZE_IN_BYTES+1)); // the [1:32) the elements are the length
-			if(inBytes[0] == 1) { //Only if it is a put command
+			if(inBytes[0] == 1 || inBytes[0] == 21) { //Only if it is a put command
 				header.setField("value-length", Arrays.copyOfRange(inBytes, KEY_SIZE_IN_BYTES+1, MIN_REQUEST_SIZE+VALUE_LENGTH_SIZE_IN_BYTES)); // the [33:34) the elements are the length
 				int val_len_int = ByteOrder.leb2int(header.getRawHeaderValue("value-length"), 0, VALUE_LENGTH_SIZE_IN_BYTES);
 

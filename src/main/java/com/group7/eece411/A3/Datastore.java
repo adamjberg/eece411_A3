@@ -131,6 +131,19 @@ public class Datastore {
 		return this.find(closestLocation);
 	}
 	
+	public NodeInfo forceTargetSelf(NodeInfo target) {
+		Set<Integer> allLocations = this.successors.keySet();
+		Iterator<Integer> itr = allLocations.iterator();
+		int t = target.getLocation();
+		while(itr.hasNext()) {
+			int location = itr.next();
+			if((location < t && (t < this.self || location > this.self)) || (t < this.self && location > this.self)) {
+				this.find(location).setOnline(false);
+			}
+		}
+		return this.findThisNode();
+	}
+	
 	private int booleanSearch(List<Integer> sortList, int searchNum) {
 		int index = sortList.size()/2;
 		int prev = sortList.size()-1;		

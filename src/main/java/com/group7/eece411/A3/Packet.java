@@ -101,7 +101,8 @@ public class Packet {
 	public String toString() {
 		return "{sourceIP:\""+this.destinationIP+"\","
 				+ "sourcePort:\""+this.destinationPort+"\","
-						+ "header:"+this.header.toString()+"}";
+						+ "header:"+this.header.toString()+","
+								+ "payload_len:"+this.getPayload().length+"}";
 	}
 	
 	public String getUIDString() {

@@ -64,6 +64,13 @@ public class UDPClient {
 		}
 	}
 
+	public void responseTo(Packet cachePacket, Packet sendPacket) throws IOException {
+		this.send(sendPacket);
+		Datastore.getInstance().storeCache(cachePacket.getUIDString(), sendPacket);
+		Datastore.getInstance().storeProcessCache(cachePacket.getUIDString(), false);		
+		Datastore.getInstance().addLog("RESPOND", sendPacket.toString());
+	}
+	
 	public void send(Packet p) throws IOException {
 		if (p == null) {
 			throw new IllegalArgumentException();

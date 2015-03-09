@@ -20,7 +20,7 @@ public class Adapter implements Runnable {
 		this.client.setTimeout(200);
 	}
 	public void run() {
-		Datastore.getInstance().addLog("Forward", "forward request to "+this.requestPacket.getDestinationIP());
+		Datastore.getInstance().addLog("Forward", this.requestPacket.toString());
 		int count = 3;
 		while(count > 0) {
 			try {
@@ -39,10 +39,8 @@ public class Adapter implements Runnable {
 				response.setDestinationIP(packet.getDestinationIP());
 				response.setDestinationPort(packet.getDestinationPort());
 
-				this.client.send(response);
+				this.client.responseTo(packet, response);
 				// Store the uniqueID in the cache with the response 
-				Datastore.getInstance().storeCache(packet.getUIDString(), response);
-				Datastore.getInstance().storeProcessCache(packet.getUIDString(), false);
 				break;	
 			} catch (IOException e) {
 				count--;

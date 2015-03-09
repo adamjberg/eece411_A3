@@ -25,10 +25,7 @@ public class KVStore {
 			Datastore.getInstance().addLog("GET", "GET("+(new String(packet.getHeader("key"), "utf-8")) + ") : " +StringUtils.byteArrayToHexString(value));
 			response = Protocol.sendResponse(packet, target.get(packet.getStringHeader("key")), 0);
 		}
-		this.client.send(response);
-		Datastore.getInstance().storeCache(packet.getUIDString(), response);
-		Datastore.getInstance().storeProcessCache(packet.getUIDString(), false);
-		Datastore.getInstance().addLog("RESPOND", response.toString());
+		this.client.responseTo(packet, response);
 	}
 	
 	public void putIn(Packet packet, NodeInfo target) throws IOException {
@@ -41,10 +38,7 @@ public class KVStore {
 			Datastore.getInstance().addLog("PUT", "(key,value) to "+target.getHost());
 			response = Protocol.sendResponse(packet, null, 0);				
 		}
-		this.client.send(response);
-		Datastore.getInstance().storeCache(packet.getUIDString(), response);
-		Datastore.getInstance().storeProcessCache(packet.getUIDString(), false);
-		Datastore.getInstance().addLog("RESPOND", response.toString());
+		this.client.responseTo(packet, response);
 	}
 	
 	public void removeFrom(Packet packet, NodeInfo target) throws IOException {
@@ -58,10 +52,7 @@ public class KVStore {
 			Datastore.getInstance().addLog("REMOVE", "Failed REMOVE key from "+target.getHost());
 			response = Protocol.sendResponse(packet, null, 1);
 		}
-		this.client.send(response);
-		Datastore.getInstance().storeCache(packet.getUIDString(), response);
-		Datastore.getInstance().storeProcessCache(packet.getUIDString(), false);
-		Datastore.getInstance().addLog("RESPOND", response.toString());
+		this.client.responseTo(packet, response);
 	}
 	
 	private Boolean forwardRequest(Packet packet, NodeInfo target) throws UnknownHostException, IOException {

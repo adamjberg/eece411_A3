@@ -82,6 +82,7 @@ public class NodeInfo {
 	}
 
 	public void setOnline(boolean isOnline) {
+		if(this.isOnline == isOnline) return;
 		this.isOnline = isOnline;
 		this.setLastUpdateDate(new Date());
 	}

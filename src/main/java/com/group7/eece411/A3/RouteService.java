@@ -33,7 +33,7 @@ public class RouteService extends Service {
 					}
 				} catch(IOException ioe) {
 					Datastore.getInstance().addLog("KVStore Error", Arrays.toString(ioe.getStackTrace()));
-					this.client.send(Protocol.sendResponse(task, null, 4));
+					this.client.responseTo(task, Protocol.sendResponse(task, null, 4));
 				}
 			}
 		} catch(Exception e) {
@@ -43,10 +43,14 @@ public class RouteService extends Service {
 	
 	private void process(Packet p) throws IOException {
 		NodeInfo target = null;
+		int cmdCode = ByteOrder.ubyte2int(p.getHeader("command")[0]);
 		if(p.getHeader("key") != null) {
 			target = Datastore.getInstance().getResponsibleNode(p.getHeader("key")[0]);
+			if(cmdCode > 19 && cmdCode < 24) {
+				target = Datastore.getInstance().forceTargetSelf(target);
+			}
 		}
-		switch (ByteOrder.ubyte2int(p.getHeader("command")[0])) {
+		switch (cmdCode) {
 			case 1: 
 				kvStore.putIn(p, target);
 				break;
@@ -61,7 +65,7 @@ public class RouteService extends Service {
 				this.program.terminate();
 				System.exit(0);
 				break;
-			case 21: 
+			case 21: 				
 				kvStore.putIn(p, target);
 				break;
 			case 22: 
@@ -75,14 +79,13 @@ public class RouteService extends Service {
 				break;
 			case 99:
 				Datastore.getInstance().addLog("ERROR", "Error value length "+ByteOrder.leb2int(p.getHeader("value-length"), 2));
-				this.client.send(Protocol.sendResponse(p, null, 4));
+				this.client.responseTo(p, Protocol.sendResponse(p, null, 4));
 				break;
 			default:
 				Datastore.getInstance().addLog("UNKNOWN", "Unknown Command Code "+p.getHeader("command")[0]);
-				this.client.send(Protocol.sendResponse(p, null, 5));
+				this.client.responseTo(p, Protocol.sendResponse(p, null, 5));
 				break;
 		}
 	}
-	
-	
+		
 }
