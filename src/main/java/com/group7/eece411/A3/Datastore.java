@@ -135,6 +135,7 @@ public class Datastore {
 		Set<Integer> allLocations = this.successors.keySet();
 		Iterator<Integer> itr = allLocations.iterator();
 		int t = target.getLocation();
+		target.setOnline(false);
 		while(itr.hasNext()) {
 			int location = itr.next();
 			if((location < t && (t < this.self || location > this.self)) || (t < this.self && location > this.self)) {
