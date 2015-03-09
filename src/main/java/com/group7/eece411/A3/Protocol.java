@@ -25,7 +25,7 @@ public class Protocol {
 	public static final int MAX_REQUEST_SIZE = VALUE_LENGTH_SIZE_IN_BYTES + MAX_VALUE_LENGTH + MIN_REQUEST_SIZE;
 	public static final int MIN_RESPONSE_SIZE = 1;
 	public static final int MAX_RESPONSE_SIZE = MIN_RESPONSE_SIZE + VALUE_LENGTH_SIZE_IN_BYTES + MAX_VALUE_LENGTH;
-
+	public static int counter = 0;
 	/*
 	 * Create response packet for a request we received earlier.
 	 */
@@ -151,7 +151,8 @@ public class Protocol {
 				.put(InetAddress.getLocalHost().getAddress())
 				.putShort((short)Datastore.getInstance().findThisNode().getPort())
 				.putShort((short)(new Random()).nextInt(1 << 15))
-				.putLong(System.currentTimeMillis());
+				.putLong(System.currentTimeMillis()+counter);
+		counter++;
 		return resultBuffer.array();
 	}
 }

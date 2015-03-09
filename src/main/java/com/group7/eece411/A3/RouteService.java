@@ -21,12 +21,11 @@ public class RouteService extends Service {
 			ArrayList<Packet> tasklist = (ArrayList<Packet>) Datastore.getInstance().poll();
 			for(Packet task : tasklist) {
 				Datastore.getInstance().addLog("RECEIVE", task.toString());
-				//set node back online
+				//TODO: set node back online
 				try {
 					Packet cachePacket = Datastore.getInstance().getCache(task.getUIDString());
 					if(cachePacket != null) {
-						this.client.responseCache(task, cachePacket);
-						Datastore.getInstance().addLog("Cache", "Cache found. Reply immedately.");
+						this.client.responseCache(task, cachePacket);						
 					} else if(Datastore.getInstance().getProcessCache(task.getUIDString()) == null || Datastore.getInstance().getProcessCache(task.getUIDString()).equals(false)) { 
 						Datastore.getInstance().storeProcessCache(task.getUIDString(), true);
 						//make sure we only process once
