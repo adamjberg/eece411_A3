@@ -8,6 +8,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.Random;
 
 /**
  * This class holds the rules on how a Packet should be formatted.  While the Packet class provides
@@ -149,7 +150,7 @@ public class Protocol {
 		ByteBuffer resultBuffer = ByteBuffer.allocate(16).order(java.nio.ByteOrder.LITTLE_ENDIAN)
 				.put(InetAddress.getLocalHost().getAddress())
 				.putShort((short)Datastore.getInstance().findThisNode().getPort())
-				.put(new byte[2])
+				.putShort((short)(new Random()).nextInt(1 << 15))
 				.putLong(System.currentTimeMillis());
 		return resultBuffer.array();
 	}
