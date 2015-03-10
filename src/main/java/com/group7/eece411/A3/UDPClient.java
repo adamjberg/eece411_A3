@@ -53,8 +53,15 @@ public class UDPClient {
 	
 	public void createSocket() throws SocketException {
 		if (this.socket == null) {
-			this.socket = new DatagramSocket(this.listenPort);
+			try {
+				this.socket = new DatagramSocket(this.listenPort);
+			} catch(SocketException se) {
+				this.socket = new DatagramSocket();
+			}
 			this.socket.setReuseAddress(true);
+			if(this.socket.getLocalPort() > 0) {
+				this.listenPort = this.socket.getLocalPort();
+			}
 		}
 	}
 
