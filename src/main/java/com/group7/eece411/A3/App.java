@@ -32,7 +32,7 @@ public class App {
 		this.listener.createSocket();
 		this.services = new HashMap<String, Service>();
 		this.services.put("monitor", (new MonitorService(10000))); //every 10 seconds
-		this.services.put("kvStore", (new RouteService(50, this))); //every 0.05 sec
+		this.services.put("kvStore", (new RouteService(100, this))); //every 0.05 sec
 		this.services.put("sync", (new SyncService(10000))); //every 10 sec
 	}
 
