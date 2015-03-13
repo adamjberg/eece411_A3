@@ -17,22 +17,12 @@ public class RouteService extends Service {
 	}
 
 	public void run() {
+		if(Datastore.breakerPoint) return;
 		try {
 			ArrayList<Packet> tasklist = (ArrayList<Packet>) Datastore.getInstance().poll();
 			for(Packet task : tasklist) {
-				Datastore.getInstance().addLog("RECEIVE", task.toString());
-				//TODO: set node back online
 				try {
-					Packet cachePacket = Datastore.getInstance().getCache(task.getUIDString());
-					if(cachePacket != null) {
-						this.client.responseCache(task, cachePacket);						
-					} else if(Datastore.getInstance().getProcessCache(task.getUIDString()) == null || Datastore.getInstance().getProcessCache(task.getUIDString()).equals(false)) { 
-						Datastore.getInstance().storeProcessCache(task.getUIDString(), true);
-						//make sure we only process once
-						process(task);
-					} else {
-						Datastore.getInstance().addLog("Packet In Progress", task.toString());
-					}
+					process(task);
 				} catch(IOException ioe) {
 					Datastore.getInstance().addLog("KVStore Error", Arrays.toString(ioe.getStackTrace()));
 					this.client.responseTo(task, Protocol.sendResponse(task, null, 4));
@@ -47,10 +37,7 @@ public class RouteService extends Service {
 		NodeInfo target = null;
 		int cmdCode = ByteOrder.ubyte2int(p.getHeader("command")[0]);
 		if(p.getHeader("key") != null) {
-			target = Datastore.getInstance().getResponsibleNode(p.getHeader("key")[0]);
-			if(cmdCode > 19 && cmdCode < 24) {
-				target = Datastore.getInstance().forceTargetSelf(target);
-			}
+			target = Datastore.getInstance().getInternalResponsibleNode(p.getHeader("key")[0]);
 		}
 		switch (cmdCode) {
 			case 1: 
@@ -89,5 +76,4 @@ public class RouteService extends Service {
 				break;
 		}
 	}
-		
 }

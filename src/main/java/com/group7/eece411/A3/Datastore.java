@@ -43,6 +43,7 @@ public class Datastore {
 	private SimpleCache<Packet> cache;
 	private SimpleCache<Boolean> processCache;
 	private ArrayList<JSONObject> logs;
+	public static boolean breakerPoint = false;
 
 	private Datastore() {
 		this.successors = new ConcurrentHashMap<Integer, NodeInfo>();
@@ -71,8 +72,13 @@ public class Datastore {
 	public List<Packet> poll() {
 		ArrayList<Packet> clone = null;
 		synchronized(this.packetQueue) {	
-			clone = this.packetQueue;
-			this.packetQueue = new ArrayList<Packet>();
+			if(this.packetQueue.size() < 100) {
+				clone = this.packetQueue;
+				this.packetQueue = new ArrayList<Packet>();
+			} else {
+				clone = new ArrayList<Packet>(this.packetQueue.subList(0, 100));
+				this.packetQueue = new ArrayList<Packet>(this.packetQueue.subList(100, this.packetQueue.size()));
+			}
 		}
 		Collections.sort(clone, new Comparator<Packet>() {
 			public int compare(Packet p1, Packet p2) {
@@ -122,12 +128,12 @@ public class Datastore {
 	public NodeInfo getResponsibleNode(int key) {
 		//System.out.println("key : "+key);
 		if(this.self == key) return this.findThisNode();
-		List<Integer> allLocations = this.findAllActiveLocations();
-		int closestLocation = booleanSearch(allLocations, key);
-		if(closestLocation == this.self) { 
-			closestLocation = booleanSearch(this.findAllLocations(), key);
-		}
-		//System.out.println("find location "+closestLocation);
+		int closestLocation = booleanSearch(this.findAllActiveLocations(), key);
+		return this.find(closestLocation);
+	}
+	
+	public NodeInfo getInternalResponsibleNode(int key) {
+		int closestLocation = booleanSearch(this.findAllLocations(), key);
 		return this.find(closestLocation);
 	}
 	
@@ -218,6 +224,7 @@ public class Datastore {
 	}
 	
 	public boolean isThisNode(NodeInfo n) {	
+		if(n == null) return true;
 		if(this.self != null) {
 			//if the node is offline, the server is responsible
 			return n.getLocation() == self || !n.isOnline();

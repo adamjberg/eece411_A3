@@ -1,9 +1,6 @@
 package com.group7.eece411.A3;
 
 import java.io.IOException;
-import java.net.UnknownHostException;
-
-import org.christianschenk.simplecache.SimpleCache;
 
 public class KVStore {
 
@@ -15,7 +12,6 @@ public class KVStore {
 	}
 
 	public void getFrom(Packet packet, NodeInfo target) throws IOException {
-		if(forwardRequest(packet, target)) return;
 		byte[] value = target.get(packet.getStringHeader("key"));		
 		Packet response = null;
 		if(value == null) {
@@ -29,7 +25,6 @@ public class KVStore {
 	}
 	
 	public void putIn(Packet packet, NodeInfo target) throws IOException {
-		if(forwardRequest(packet, target)) return;
 		Packet response = null;
 		if(!target.put(packet.getStringHeader("key"), packet.getPayload())) {
 			Datastore.getInstance().addLog("PUT", "Failed PUT (key,value) to "+target.getHost());
@@ -42,7 +37,6 @@ public class KVStore {
 	}
 	
 	public void removeFrom(Packet packet, NodeInfo target) throws IOException {
-		if(forwardRequest(packet, target)) return;
 		Packet response = null;
 		if(target.get(packet.getStringHeader("key")) != null) {
 			target.remove(packet.getStringHeader("key"));
@@ -53,13 +47,5 @@ public class KVStore {
 			response = Protocol.sendResponse(packet, null, 1);
 		}
 		this.client.responseTo(packet, response);
-	}
-	
-	private Boolean forwardRequest(Packet packet, NodeInfo target) throws UnknownHostException, IOException {
-		if(!Datastore.getInstance().isThisNode(target)) {
-			//create new Adapter to send requestPacket and listen for reply
-			(new Thread(new Adapter(packet, target))).start();
-			return true;
-		} return false;
 	}
 }

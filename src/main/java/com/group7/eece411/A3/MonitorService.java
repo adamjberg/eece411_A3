@@ -8,7 +8,6 @@ import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.UnknownHostException;
 import java.text.ParseException;
 
 import org.json.simple.JSONObject;
@@ -37,7 +36,7 @@ public class MonitorService extends Service
     public void run()
     {	
 		try {
-			//System.out.println(new String(getData()));
+			Datastore.getInstance().findThisNode().update();
 			client.send(host, port, getData());
 		} catch (Exception e) {
 			Datastore.getInstance().addException("EXCEPTION", e);
