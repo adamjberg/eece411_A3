@@ -3,6 +3,7 @@ package com.group7.eece411.A3;
 import java.net.UnknownHostException;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 
 public class Service extends TimerTask{
 
@@ -22,7 +23,7 @@ public class Service extends TimerTask{
 	
 	public void start() {
 		this.timer = new Timer(true); //daemon thread
-		this.timer.scheduleAtFixedRate(this, 0, this.period);
+		this.timer.schedule(this, 0, this.period);
 	}
 
     

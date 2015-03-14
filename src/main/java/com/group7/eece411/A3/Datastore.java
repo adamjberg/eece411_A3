@@ -72,13 +72,8 @@ public class Datastore {
 	public List<Packet> poll() {
 		ArrayList<Packet> clone = null;
 		synchronized(this.packetQueue) {	
-			if(this.packetQueue.size() < 100) {
-				clone = this.packetQueue;
-				this.packetQueue = new ArrayList<Packet>();
-			} else {
-				clone = new ArrayList<Packet>(this.packetQueue.subList(0, 100));
-				this.packetQueue = new ArrayList<Packet>(this.packetQueue.subList(100, this.packetQueue.size()));
-			}
+			clone = this.packetQueue;
+			this.packetQueue = new ArrayList<Packet>();
 		}
 		Collections.sort(clone, new Comparator<Packet>() {
 			public int compare(Packet p1, Packet p2) {
@@ -129,6 +124,7 @@ public class Datastore {
 		//System.out.println("key : "+key);
 		if(this.self == key) return this.findThisNode();
 		int closestLocation = booleanSearch(this.findAllActiveLocations(), key);
+		//System.out.println("loc "+closestLocation);
 		return this.find(closestLocation);
 	}
 	
@@ -153,13 +149,13 @@ public class Datastore {
 	
 	private int booleanSearch(List<Integer> sortList, int searchNum) {
 		int index = sortList.size()/2;
-		int prev = sortList.size()-1;		
+		int prev = sortList.size();		
 		//System.out.println(Arrays.toString(sortList.toArray()));
 		while(true) {
 			int diff = (int) Math.ceil(Math.abs(prev - index)/2.0);
 			//System.out.println("diff :"+diff+", prev : "+prev+", searchNum : "+searchNum+", index : "+index+", location : "+sortList.get(index));
 			prev = index;
-			if(sortList.get(index).equals(searchNum) || diff == 0) {
+			if(sortList.get(index).equals(searchNum)) {
 				return sortList.get(index);
 			} else if(sortList.get(index) < searchNum ) {
 				if(index == sortList.size() - 1 || sortList.get(index+1) > searchNum) {

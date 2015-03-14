@@ -17,7 +17,7 @@ public class RouteService extends Service {
 	}
 
 	public void run() {
-		if(Datastore.breakerPoint) return;
+		
 		try {
 			ArrayList<Packet> tasklist = (ArrayList<Packet>) Datastore.getInstance().poll();
 			for(Packet task : tasklist) {
@@ -30,7 +30,7 @@ public class RouteService extends Service {
 			}
 		} catch(Exception e) {
 			Datastore.getInstance().addException("Exception", e);
-		}
+		}		
     }
 	
 	private void process(Packet p) throws IOException {

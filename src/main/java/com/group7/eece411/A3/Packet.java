@@ -14,11 +14,14 @@ public class Packet {
 	private byte[] payload;
 	private String destinationIP;
 	private int destinationPort;
+	private String sourceIP;
+	private int sourcePort;
 	
 	public Packet(Header h) {
 		this.header = h;
 		this.payload = new byte[0];
 		this.destinationPort = 0;
+		this.sourcePort = 0;
 	}
 	
 	public Packet(Header h, byte[] payload) {
@@ -78,6 +81,22 @@ public class Packet {
 			this.destinationPort = ByteOrder.leb2int(this.header.getRawHeaderValue("port"), 0, 2);
 		}
 		return this.destinationPort;
+	}
+	
+	public void setSourceIP(String ip) {
+		this.sourceIP = ip;
+	}
+	
+	public void setSourcePort(int port) {
+		this.sourcePort = port;
+	}
+	
+	public String getSourceIP() {
+		return this.sourceIP;
+	}
+	
+	public int getSourcePort() {
+		return this.sourcePort;
 	}
 	
 	public byte[] getUID() {
