@@ -43,8 +43,8 @@ public class Adapter implements Runnable {
 				} catch (IOException e) {
 					count--;
 					if(count <= 0) {
-						count = fail();
 						Datastore.getInstance().addLog("Timeout", target.getHost() + " is unreachable.");
+						count = fail();
 					} else {
 						this.client.setTimeout(this.client.getTimeout()*2);
 						try {

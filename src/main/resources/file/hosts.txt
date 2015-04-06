@@ -2,7 +2,7 @@ planetlab-4.cs.ucy.ac.cy:7777:5
 planetlab-3.imperial.ac.uk:7777:25
 75-130-96-12.static.oxfr.ma.charter.com:7777:55
 planetlab-1.fhi-fokus.de:7777:75
-planetlab1.koganei.itrc.net:7777:95
+127.0.0.1:7777:95
 planetlab-1.ssvl.kth.se:7777:135
 planetlab1.s3.kth.se:7777:175
 planetlab2.upc.es:7777:215

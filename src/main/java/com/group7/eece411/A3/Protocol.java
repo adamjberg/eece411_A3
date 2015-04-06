@@ -74,8 +74,16 @@ public class Protocol {
 			p = new Packet(header);
 		} else {
 			// Retrieve the data from the array
-			header.setField("command", new byte[] {inBytes[0]});// The first elemt is the Command code 
-			header.setField("key", Arrays.copyOfRange(inBytes, 1, KEY_SIZE_IN_BYTES+1)); // the [1:32) the elements are the length
+			header.setField("command", new byte[] {inBytes[0]});// The first elemt is the Command code
+			byte[] keyBytes = Arrays.copyOfRange(inBytes, 1, KEY_SIZE_IN_BYTES+1);
+			if(inBytes[0] > 0 && inBytes[0] < 4) {
+				int hashCode = StringUtils.byteArrayToHexString(keyBytes).hashCode();
+				byte[] tempKey = new byte[32];
+				ByteOrder.int2leb(hashCode, tempKey, 0);
+				header.setField("key", tempKey);
+			} else {
+				header.setField("key", keyBytes); // the [1:32) the elements are the length
+			}
 			if(inBytes[0] == 1 || inBytes[0] == 21) { //Only if it is a put command
 				header.setField("value-length", Arrays.copyOfRange(inBytes, KEY_SIZE_IN_BYTES+1, MIN_REQUEST_SIZE+VALUE_LENGTH_SIZE_IN_BYTES)); // the [33:34) the elements are the length
 				int val_len_int = ByteOrder.leb2int(header.getRawHeaderValue("value-length"), 0, VALUE_LENGTH_SIZE_IN_BYTES);

@@ -61,10 +61,11 @@ public class App {
 					int cmdCode = ByteOrder.ubyte2int(p.getHeader("command")[0]);
 					NodeInfo target = Datastore.getInstance().findThisNode();
 					if(p.getHeader("key") != null) {						
-						if(cmdCode > 20 && cmdCode < 24) {
-							target = Datastore.getInstance().forceTargetSelf(target);
-						} else if(cmdCode > 0 && cmdCode < 4) {
+						if((cmdCode > 0 && cmdCode < 4) || (cmdCode > 20 && cmdCode < 24)) {
 							target = Datastore.getInstance().getResponsibleNode(p.getHeader("key")[0]);
+							if(cmdCode > 20 && cmdCode < 24) {
+								target = Datastore.getInstance().forceTargetSelf(target);
+							}
 						}						
 					} 
 					if(Datastore.getInstance().isThisNode(target)) {
