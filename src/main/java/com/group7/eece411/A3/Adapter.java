@@ -17,53 +17,48 @@ public class Adapter implements Runnable {
 		this.requestPacket = Protocol.forwardRequest(packet, target);
 		this.target = target;
 		this.client = new UDPClient();
-		this.client.setTimeout(250);
+		this.client.setTimeout(1500);
 	}
 	public void run() {
-		Datastore.getInstance().addLog("Forward", this.requestPacket.toString());
-		int count = 3;
-		while(count > 0) {
+		boolean isReceived = false;
+		while(!isReceived) {
+			//Datastore.getInstance().addLog("Forward", this.requestPacket.toString());
+			
 			try {
-				this.client.send(this.requestPacket);			
-				try {
-					// Receive the response from the target node
-					Packet response = this.client.receiveResponse();
-					// Copy the old unique ID
-					Protocol.decodeUniqueId(packet.getUID(), response.getHeader());
-		
-					// Set the destination to the original requester
-					response.setDestinationIP(packet.getDestinationIP());
-					response.setDestinationPort(packet.getDestinationPort());
-	
-					this.client.responseTo(packet, response);
-					// Store the uniqueID in the cache with the response 
-					this.client.closeSocket();
-					Datastore.getInstance().setNodeStatus(target.getLocation(), true);
-					break;	
-				} catch (IOException e) {
-					count--;
-					if(count <= 0) {
-						Datastore.getInstance().addLog("Timeout", target.getHost() + " is unreachable.");
-						count = fail();
-					} else {
-						this.client.setTimeout(this.client.getTimeout()*2);
-						try {
-							this.client.createSocket();
-						} catch (SocketException e1) {
-							Datastore.getInstance().addException("SocketException", e1);
-							break;
-						}
-					}
+				this.client.send(this.requestPacket);		
+				this.client.send(this.requestPacket);	
+				this.client.send(this.requestPacket);	
+				// Receive the response from the target node
+				Packet response = this.client.receiveResponse();
+				//Datastore.getInstance().addLog("Received from Forward", response.toString());
+				while(!response.getUIDString().equals(requestPacket.getUIDString())) {
+					response = this.client.receiveResponse();
+					//Datastore.getInstance().addLog("Received from Forward", response.toString());
+					
 				}
+				this.client.closeSocket();
+				isReceived = true;
+				// Copy the old unique ID
+				Protocol.decodeUniqueId(packet.getUID(), response.getHeader());
+	
+				// Set the destination to the original requester
+				response.setDestinationIP(packet.getDestinationIP());
+				response.setDestinationPort(packet.getDestinationPort());
+				
+				// Store the uniqueID in the cache with the response 
+				Datastore.getInstance().storeCache(response.getUIDString(), response);
+				Datastore.getInstance().storeProcessCache(response.getUIDString(), false);		
+				
+				Datastore.getInstance().setNodeStatus(target.getLocation(), true);
 			} catch (IOException ioe) {
 				Datastore.getInstance().addLog("IOException", this.requestPacket.toString());
 				Datastore.getInstance().addException("IOException", ioe);
-				count = fail();
+				isReceived = fail();
 			}
 		}
 	}
 	
-	private int fail() {
+	private boolean fail() {
 		// Mark the target node as down
 		Datastore.getInstance().setNodeStatus(target.getLocation(), false);
 		
@@ -73,12 +68,12 @@ public class Adapter implements Runnable {
 			// Store the packet back in the queue to be handles again
 			Datastore.getInstance().queue(packet);
 			this.client.closeSocket();
-			return 0;
+			return true;
 		} else {
 			requestPacket.setDestinationIP(target.getHost());
 			requestPacket.setDestinationPort(target.getPort());
-			this.client.setTimeout(250);
-			return 3;
+			this.client.setTimeout(1500);
+			return false;
 		}
 	}
 }

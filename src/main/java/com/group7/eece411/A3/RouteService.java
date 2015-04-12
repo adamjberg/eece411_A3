@@ -25,7 +25,7 @@ public class RouteService extends Service {
 					process(task);
 				} catch(IOException ioe) {
 					Datastore.getInstance().addLog("KVStore Error", Arrays.toString(ioe.getStackTrace()));
-					this.client.responseTo(task, Protocol.sendResponse(task, null, 4));
+					this.client.responseTo(Protocol.sendResponse(task, null, 4));
 				}
 			}
 		} catch(Exception e) {
@@ -35,6 +35,7 @@ public class RouteService extends Service {
 	
 	private void process(Packet p) throws IOException {
 		NodeInfo target = null;
+		Packet packetToSender = null;
 		int cmdCode = ByteOrder.ubyte2int(p.getHeader("command")[0]);
 		if(p.getHeader("key") != null) {
 			target = Datastore.getInstance().getInternalResponsibleNode(p.getHeader("key")[0]);
@@ -54,25 +55,37 @@ public class RouteService extends Service {
 				this.program.terminate();
 				System.exit(0);
 				break;
-			case 21: 				
-				kvStore.putIn(p, target);
+			case 21: 		
+				packetToSender = kvStore.putIn(p, target);
+				this.client.responseTo(packetToSender); //send ack again
+				this.client.responseTo(packetToSender); //send ack again
+				packetToSender = Protocol.respondToSender(p, packetToSender);
+				this.client.responseTo(packetToSender); //send to the original requester
 				break;
 			case 22: 
-				kvStore.getFrom(p, target);
+				packetToSender = kvStore.getFrom(p, target);
+				this.client.responseTo(packetToSender); //send ack again
+				this.client.responseTo(packetToSender); //send ack again
+				packetToSender = Protocol.respondToSender(p, packetToSender);
+				this.client.responseTo(packetToSender);
 				break;
 			case 23: 
-				kvStore.removeFrom(p, target);
+				packetToSender = kvStore.removeFrom(p, target);
+				this.client.responseTo(packetToSender); //send ack again
+				this.client.responseTo(packetToSender); //send ack again
+				packetToSender = Protocol.respondToSender(p, packetToSender);
+				this.client.responseTo(packetToSender);
 				break;
 			case 24:
 				this.stop();
 				break;
 			case 99:
 				Datastore.getInstance().addLog("ERROR", "Error value length "+ByteOrder.leb2int(p.getHeader("value-length"), 2));
-				this.client.responseTo(p, Protocol.sendResponse(p, null, 4));
+				this.client.responseTo(Protocol.sendResponse(p, null, 4));
 				break;
 			default:
 				Datastore.getInstance().addLog("UNKNOWN", "Unknown Command Code "+p.getHeader("command")[0]);
-				this.client.responseTo(p, Protocol.sendResponse(p, null, 5));
+				this.client.responseTo(Protocol.sendResponse(p, null, 5));
 				break;
 		}
 	}

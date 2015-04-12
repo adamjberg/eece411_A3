@@ -16,12 +16,14 @@ public class Packet {
 	private int destinationPort;
 	private String sourceIP;
 	private int sourcePort;
+	private byte[] senderUID;
 	
 	public Packet(Header h) {
 		this.header = h;
 		this.payload = new byte[0];
 		this.destinationPort = 0;
 		this.sourcePort = 0;
+		this.sourceIP = "";
 	}
 	
 	public Packet(Header h, byte[] payload) {
@@ -35,7 +37,15 @@ public class Packet {
 	public byte[] getPayload() {
 		return this.payload;
 	}
-	 
+	
+	public byte[] getSenderUID() {
+		return this.senderUID;
+	}
+	
+	public void setSenderUID(byte[] uid) {
+		this.senderUID = uid;
+	}
+	
 	public Header getHeader() {
 		return this.header;
 	}
@@ -118,10 +128,12 @@ public class Packet {
 	
 	@Override
 	public String toString() {
-		return "{sourceIP:\""+this.destinationIP+"\","
-				+ "sourcePort:\""+this.destinationPort+"\","
+		return "{destinationIP:\""+this.destinationIP+"\","
+				+ "destinationPort:\""+this.destinationPort+"\","
 						+ "header:"+this.header.toString()+","
-								+ "payload_len:"+this.getPayload().length+"}";
+								+ "payload_len:"+this.getPayload().length+","
+								+ "senderIP:\""+this.sourceIP+"\","
+								+ "senderPort:\""+this.sourcePort+"\"}";
 	}
 	
 	public String getUIDString() {

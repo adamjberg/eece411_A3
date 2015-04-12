@@ -77,11 +77,11 @@ public class UDPClient {
 		this.send(cachePacket);
 		Datastore.getInstance().addLog("RESPOND Cache", cachePacket.toString());
 	}
-	public void responseTo(Packet cachePacket, Packet sendPacket) throws IOException {
+	public void responseTo(Packet sendPacket) throws IOException {
 		this.send(sendPacket);
-		Datastore.getInstance().storeCache(cachePacket.getUIDString(), sendPacket);
-		Datastore.getInstance().storeProcessCache(cachePacket.getUIDString(), false);		
-		Datastore.getInstance().addLog("RESPOND", sendPacket.toString());
+		Datastore.getInstance().storeCache(sendPacket.getUIDString(), sendPacket);
+		Datastore.getInstance().storeProcessCache(sendPacket.getUIDString(), false);		
+		//Datastore.getInstance().addLog("RESPOND", sendPacket.toString());
 	}
 	
 	public void send(Packet p) throws IOException {
