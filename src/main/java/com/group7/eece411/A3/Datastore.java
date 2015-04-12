@@ -218,6 +218,10 @@ public class Datastore {
 		} catch (IOException e) {
 			this.addLog("IOException", Arrays.toString(e.getStackTrace()));
 		}
+//		for (Integer key : successors.keySet()) {
+//	        System.out.println("Successor: "+ key + " " + successors.get(key));
+//	    }
+
 		//fillEmptyLocations();
 	}
 	

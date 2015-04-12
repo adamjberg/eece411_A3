@@ -5,6 +5,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.DatagramPacket;
 import java.net.UnknownHostException;
 import java.util.Arrays;
+import java.util.Collection;
 
 public class SyncService extends Service {
 
@@ -14,8 +15,20 @@ public class SyncService extends Service {
 	}
 
 	public void run() {
-		//NodeInfo target = Datastore.getInstance().findRandomNode(); //find half nodes
-		//Datastore.getInstance().addLog("SYNC", "PUSH "+target.getHost());
+		Collection<NodeInfo> successors = Datastore.getInstance().findAll();
+		successors.remove(Datastore.getInstance().findThisNode()); // Remove yourself from successor list
+		
+		// Send messages to all successors
+		for (NodeInfo successor : successors) {
+			Datastore.getInstance().addLog("SYNC", "PUSH "+ successor.getHost()+":"+successor.getPort());
+			try {
+				client.send(successor.getHost(), 9999, Datastore.getInstance().findThisNode().getKVString().getBytes());
+			} catch (IOException e) {
+				Datastore.getInstance().addException("IOException", e);
+			}
+			
+		}
+		
 		DatagramPacket p;
 		byte[] buffer;
 		while(true) {
@@ -24,18 +37,16 @@ public class SyncService extends Service {
 				p = this.client.receive(buffer);
 				sync(buffer);
 			} catch (IOException e) {
-				//Datastore.getInstance().addException("IOException", e);
-				break;
+				Datastore.getInstance().addException("IOException", e);
 			}
 		}
-		//Datastore.getInstance().addLog("HASHTABLE", Datastore.getInstance().findAll());
 		
 	}
 	
 	private void sync(byte[] bytes) {
 		try {
 			String str = new String(bytes, "utf8");
-			//Datastore.getInstance().addLog("DEBUG", str);
+			Datastore.getInstance().addLog("DEBUG Datastore SYNC", str);
 			//TODO: sync with datastore and set node updated
 		} catch (UnsupportedEncodingException e) {
 			Datastore.getInstance().addLog("UnsupportedEncodingException", Arrays.toString(e.getStackTrace()));
