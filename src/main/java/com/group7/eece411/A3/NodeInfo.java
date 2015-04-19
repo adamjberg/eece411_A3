@@ -21,6 +21,8 @@ public class NodeInfo {
 	private long spaceAvailable = 64 * 1024 * 1024;
 	private boolean isOnline;
 	private Date lastUpdateDate;
+	private boolean isReplica;
+	private boolean isPredecessor;
 	
 	public NodeInfo (String host, int port, int location) {
 		this.hostName = host;
@@ -29,8 +31,14 @@ public class NodeInfo {
 		this.kvStore = new ConcurrentHashMap<String, String>();
 		this.setOnline(false);
 		this.setLastUpdateDate(new Date());
+		this.isReplica = false;
+		this.setPredecessor(false);
 	}
 
+	public void setReplica(boolean isReplica) {
+		this.isReplica = isReplica;
+	}
+	
 	public byte[] get(String key) {
 		if(kvStore.get(key) != null)
 			return StringUtils.hexStringToByteArray(kvStore.get(key));
@@ -39,6 +47,7 @@ public class NodeInfo {
 	
 	public boolean put(String key, byte[] value) throws UnsupportedEncodingException {
 		if(this.kvStore.size() >= SPACESIZE || spaceAvailable - value.length < 0) {
+			//Datastore.getInstance().addLog("DEBUG", "size : "+ this.kvStore.size()+"space available : " + spaceAvilable + ", value.length : "+value.length);
 			return false;
 		}
 		if(this.kvStore.get(key) != null) {
@@ -46,12 +55,14 @@ public class NodeInfo {
 		}
 		spaceAvailable -= value.length;
 		this.kvStore.put(key, StringUtils.byteArrayToHexString(value));
+		update();
 		return true;
 	}
 	
 	public void remove(String key) {
 		byte[] bytesRemoved = this.kvStore.remove(key).getBytes(Charset.forName("UTF-8"));
 		spaceAvailable += bytesRemoved.length;
+		update();
 	}
 	
 	public String getHost() {
@@ -113,7 +124,11 @@ public class NodeInfo {
 		map.put("status", this.isOnline());
 		map.put("lastUpdateDate", this.getLastUpdateDate().getTime());
 		map.put("spaceAvailable", this.spaceAvailable);
-		map.put("kvstore", this.kvStore);
+		if(this.kvStore.keySet().size() < 50) {
+			map.put("kvstore", this.kvStore);
+		} else {
+			map.put("kvstore", "{}");
+		}
 		return map.toJSONString();
 	}
 	
@@ -126,6 +141,20 @@ public class NodeInfo {
 		if(this.lastUpdateDate.getTime() < Integer.valueOf((String)obj.get("lastUpdateDate"))) {
 			
 		}
+	}
+
+	/**
+	 * @return the isPredecessor
+	 */
+	public boolean isPredecessor() {
+		return isPredecessor;
+	}
+
+	/**
+	 * @param isPredecessor the isPredecessor to set
+	 */
+	public void setPredecessor(boolean isPredecessor) {
+		this.isPredecessor = isPredecessor;
 	}
 }
 

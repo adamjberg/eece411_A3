@@ -1,13 +1,11 @@
 package com.group7.eece411.A3;
 
 import java.io.IOException;
-import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 
 public class App {
 	private UDPClient listener; 
@@ -36,47 +34,43 @@ public class App {
 		this.listener.setTimeout(0);
 		this.listener.createSocket();
 		this.services = new HashMap<String, Service>();
-		this.services.put("monitor", (new MonitorService(10000))); //every 10 seconds
+		this.services.put("monitor", (new MonitorService(15000))); //every 15 seconds
+		this.services.put("sync", (new SyncService(100))); //every 10 sec
 		this.services.put("kvStore", (new RouteService(50, this))); //every 0.1 sec
-		this.services.put("sync", (new SyncService(10000))); //every 10 sec
-		this.networkService = Executors.newFixedThreadPool(15);
+		this.networkService = Executors.newFixedThreadPool(1);
 	}
 
 	public void run() {
 		this.start();
 		
 		Packet p = null;
+		int cmdCode;
+		NodeInfo target = null;
 		do {
 			try{
 				p = this.listener.receive(); 
-				//Datastore.getInstance().addLog("RECEIVE", p.toString());
-				Packet cachePacket = Datastore.getInstance().getCache(p.getUIDString());
-				if(cachePacket != null) {
-					this.listener.responseCache(p, cachePacket);						
-				} else if(Datastore.getInstance().getProcessCache(p.getUIDString()) == null 
-						|| Datastore.getInstance().getProcessCache(p.getUIDString()).equals(new Boolean(false))) { 
-					Datastore.getInstance().storeProcessCache(p.getUIDString(), true);
-					//make sure we only process once
-					
-					int cmdCode = ByteOrder.ubyte2int(p.getHeader("command")[0]);
-					NodeInfo target = Datastore.getInstance().findThisNode();
-					if(p.getHeader("key") != null) {						
-						if((cmdCode > 0 && cmdCode < 4) || (cmdCode > 20 && cmdCode < 24)) {
-							target = Datastore.getInstance().getResponsibleNode(p.getHeader("key")[0]);
+				
+				if(p != null) {
+					//Datastore.getInstance().addLog("RECEIVE", p.toString());
+					cmdCode = ByteOrder.ubyte2int(p.getHeader("command")[0]);
+					if(p.getHeader("key") != null && ((cmdCode > 0 && cmdCode < 4) || (cmdCode > 20 && cmdCode < 24))) {
+						target = Datastore.getInstance().getResponsibleNode(p.getHeader("key")[0]);	
+						if((cmdCode > 0 && cmdCode < 4) && !Datastore.getInstance().isThisNode(target)) {
+							networkService.execute(new Adapter(p, target));
+						} else {
 							if(cmdCode > 20 && cmdCode < 24) {
-								target = Datastore.getInstance().forceTargetSelf(target);
+								Datastore.getInstance().forceTargetSelf(target);
 							}
-						}						
-					} 
-					if(Datastore.getInstance().isThisNode(target)) {
-						this.db.queue(p);
+							this.db.queue(p);
+						}
 					} else {
-						networkService.execute(new Adapter(p, target));
+						this.db.queue(p);
 					}
 				} 			
 			}  catch(Exception e) {
 				Datastore.getInstance().addLog("EXCEPTION", Arrays.toString(e.getStackTrace()));	
-    		}
+				e.printStackTrace();
+			}
 		} while (!this.services.values().isEmpty());
 	}	
 	
@@ -88,12 +82,12 @@ public class App {
 	}
 	
 	public void terminate() {
-		Datastore.getInstance().addLog("SYSTEM", "The system is shutting down.");
 		Iterator<Service> serviceIterator = this.services.values().iterator();
 		while(serviceIterator.hasNext()) {
 			serviceIterator.next().terminate();
 			serviceIterator.remove();
 		}
 		networkService.shutdown();
+		System.exit(0);
 	}
 }

@@ -28,6 +28,7 @@ public class MonitorService extends Service
 		try {
 			this.loc = (JSONObject)(new JSONParser()).parse(request("http://ip-api.com/json/"+InetAddress.getLocalHost().getHostAddress(), "GET"));
 		} catch (org.json.simple.parser.ParseException e) {
+			e.printStackTrace();
 			Datastore.getInstance().addException("JSON ParseException", e);
 			this.loc = new JSONObject();
 		} 
@@ -38,8 +39,17 @@ public class MonitorService extends Service
 		try {
 			Datastore.getInstance().findThisNode().update();
 			client.send(host, port, getData());
-		} catch (Exception e) {
+		} catch (IOException e) {
+			e.printStackTrace();
 			Datastore.getInstance().addException("EXCEPTION", e);
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (org.json.simple.parser.ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch(Exception e) {
+			e.printStackTrace();
 		}
     }
     
@@ -65,7 +75,7 @@ public class MonitorService extends Service
 		map.put("logs", Datastore.getInstance().getLogs());
 		map.put("kvstore", Datastore.getInstance().findAll());	
 		map.put("index", Datastore.getInstance().findThisNode().getLocation());
-    		
+
 		return map.toJSONString().getBytes();
     }
 }

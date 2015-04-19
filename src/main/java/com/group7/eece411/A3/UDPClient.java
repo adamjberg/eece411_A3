@@ -7,6 +7,7 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author Danny Chih Yang Hsieh
@@ -68,19 +69,25 @@ public class UDPClient {
 	public void closeSocket() {
 		if (this.socket != null && !this.socket.isClosed()) {
 			this.socket.close();
+			this.socket = null;
 		}
 	}
 
 	public void responseCache(Packet receivePacket, Packet cachePacket) throws IOException {
-		cachePacket.setDestinationIP(receivePacket.getDestinationIP());
-		cachePacket.setDestinationPort(receivePacket.getDestinationPort());
+		responseCache(receivePacket.getDestinationIP(), receivePacket.getDestinationPort(), cachePacket);
+	}
+	
+	public void responseCache(String ip, int port, Packet cachePacket) throws IOException {
+		cachePacket.setDestinationIP(ip);
+		cachePacket.setDestinationPort(port);
 		this.send(cachePacket);
 		Datastore.getInstance().addLog("RESPOND Cache", cachePacket.toString());
 	}
+	
 	public void responseTo(Packet sendPacket) throws IOException {
 		this.send(sendPacket);
 		Datastore.getInstance().storeCache(sendPacket.getUIDString(), sendPacket);
-		Datastore.getInstance().storeProcessCache(sendPacket.getUIDString(), false);		
+		//Datastore.getInstance().storeProcessCache(sendPacket.getUIDString(), false);		
 		//Datastore.getInstance().addLog("RESPOND", sendPacket.toString());
 	}
 	
@@ -115,12 +122,31 @@ public class UDPClient {
 	public Packet receive() throws IOException {
 		byte buffer[] = new byte[16384];
 		DatagramPacket packet = receive(buffer);
-		return Protocol.receiveRequest(Arrays.copyOfRange(buffer, 0, packet.getLength()), packet.getAddress().getHostAddress(), packet.getPort());
+		Header header = new Header();
+		Protocol.decodeUniqueId(Arrays.copyOfRange(buffer, 0, 16), header);
+		Packet cachePacket = Datastore.getInstance().getCache(header.getUIDString());
+		if(cachePacket == null) { 
+			Datastore.getInstance().storeCache(header.getUIDString(), new Packet());
+			//make sure we only process once
+			
+			return Protocol.receiveRequest(header, Arrays.copyOfRange(buffer, 16, packet.getLength()), packet.getAddress().getHostAddress(), packet.getPort());
+		} else if(!cachePacket.isEmpty()) {
+			this.responseCache(packet.getAddress().getHostAddress(), packet.getPort(), cachePacket);
+		} 
+		return null;
 	}
 	
-	public Packet receiveResponse() throws IOException {
+	public Packet receiveResponse(String uid) throws IOException {
 		byte buffer[] = new byte[16384];
-		DatagramPacket packet = receive(buffer);
+		String uidString;
+		DatagramPacket packet;
+		do {
+			packet = receive(buffer);
+			uidString = StringUtils.byteArrayToHexString(Arrays.copyOfRange(buffer, 0, 4)) + ":" +
+					StringUtils.byteArrayToHexString(Arrays.copyOfRange(buffer, 4, 6)) + ":" +
+					StringUtils.byteArrayToHexString(Arrays.copyOfRange(buffer, 6, 8)) + ":" +
+					StringUtils.byteArrayToHexString(Arrays.copyOfRange(buffer, 8, 16));
+		} while(!uid.equals(uidString));
 		return Protocol.receiveResponse(Arrays.copyOfRange(buffer, 0, packet.getLength()), packet.getAddress().getHostAddress(), packet.getPort());
 	}
 
@@ -132,4 +158,9 @@ public class UDPClient {
 		return packet;
 	}
 
+	public void forwardCopies(List<Packet> packets) throws IOException {
+		for(Packet p : packets) {
+			this.send(p);
+		}
+	}
 }

@@ -85,10 +85,10 @@ public class Header {
 	}
 	
 	public String getUIDString() {
-		return this.fields.get("sourceIP")+":"+
-				this.fields.get("port")+":"+
-				this.fields.get("random")+":"+
-				this.fields.get("timestamp");
+		return this.getHeaderValue("sourceIP")+":"+
+				this.getHeaderValue("port")+":"+
+				this.getHeaderValue("random")+":"+
+				this.getHeaderValue("timestamp");
 	}
 	
 	@Override 

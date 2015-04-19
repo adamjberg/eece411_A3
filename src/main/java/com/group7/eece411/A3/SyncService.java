@@ -10,25 +10,21 @@ public class SyncService extends Service {
 
 	public SyncService(int period) throws UnknownHostException {
 		super(period, 9999);
-		this.client.setTimeout(5000);
+		this.client.setTimeout(100);
 	}
 
 	public void run() {
 		//NodeInfo target = Datastore.getInstance().findRandomNode(); //find half nodes
 		//Datastore.getInstance().addLog("SYNC", "PUSH "+target.getHost());
-		DatagramPacket p;
-		byte[] buffer;
-		while(true) {
-			buffer = new byte[16384];
-			try {
-				p = this.client.receive(buffer);
-				sync(buffer);
-			} catch (IOException e) {
-				//Datastore.getInstance().addException("IOException", e);
-				break;
+		Packet p;
+		try {
+			while(true) {
+				p = this.client.receive();
+				Datastore.getInstance().queue(p);
 			}
+		} catch (IOException e) {
+			//Datastore.getInstance().addException("IOException", e);
 		}
-		//Datastore.getInstance().addLog("HASHTABLE", Datastore.getInstance().findAll());
 		
 	}
 	

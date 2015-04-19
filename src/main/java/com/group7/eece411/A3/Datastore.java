@@ -4,8 +4,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,23 +34,29 @@ import org.json.simple.parser.ParseException;
 public class Datastore {
 	public static int CIRCLE_SIZE = 256;
 	public static final long TIMEOUT = 30;
-	public static final long PROCESS_TIMEOUT = 5;
+	public static final long PROCESS_TIMEOUT = 15;
 
 	private static Datastore instance = null;
 	private ConcurrentHashMap<Integer, NodeInfo> successors;
 	private Integer self;
 	private ArrayList<Packet> packetQueue;
+	private ArrayList<DatagramPacket> datagramQueue;
 	private SimpleCache<Packet> cache;
-	private SimpleCache<Boolean> processCache;
+	//private SimpleCache<Boolean> processCache;
 	private ArrayList<JSONObject> logs;
 	public static boolean breakerPoint = false;
-
+	private ArrayList<NodeInfo> replicas;
+	private ArrayList<NodeInfo> predecessor;
+	
 	private Datastore() {
 		this.successors = new ConcurrentHashMap<Integer, NodeInfo>();
 		this.packetQueue = new ArrayList<Packet>();
+		this.datagramQueue = new ArrayList<DatagramPacket>();
 		this.logs = new ArrayList<JSONObject>();
 		this.cache = new SimpleCache<Packet>(TIMEOUT);
-		this.processCache = new SimpleCache<Boolean>(PROCESS_TIMEOUT);
+		//this.processCache = new SimpleCache<Boolean>(PROCESS_TIMEOUT);
+		this.replicas = new ArrayList<NodeInfo>();
+		this.predecessor = new ArrayList<NodeInfo>();
 		setupNodes();
 	}
 
@@ -63,6 +69,21 @@ public class Datastore {
 		return instance;
 	}
 
+	public void queue(DatagramPacket d) {
+		synchronized(this.datagramQueue) {
+			this.datagramQueue.add(d);
+		}
+	}
+	
+	public List<DatagramPacket> pollDatagram() {
+		ArrayList<DatagramPacket> clone = null;
+		synchronized(this.datagramQueue) {	
+			clone = this.datagramQueue;
+			this.datagramQueue = new ArrayList<DatagramPacket>();
+		}
+		return clone;
+	}
+	
 	public void queue(Packet p) {
 		synchronized(this.packetQueue) {
 			this.packetQueue.add(p);
@@ -75,11 +96,6 @@ public class Datastore {
 			clone = this.packetQueue;
 			this.packetQueue = new ArrayList<Packet>();
 		}
-		Collections.sort(clone, new Comparator<Packet>() {
-			public int compare(Packet p1, Packet p2) {
-		        return p1.getDate().compareTo(p2.getDate());
-		    }
-		});
 		return clone;
 	}
 	
@@ -123,13 +139,13 @@ public class Datastore {
 	public NodeInfo getResponsibleNode(int key) {
 		//System.out.println("key : "+key);
 		if(this.self == key) return this.findThisNode();
-		int closestLocation = booleanSearch(this.findAllActiveLocations(), key);
+		int closestLocation = binarySearch(this.findAllActiveLocations(), key);
 		//System.out.println("loc "+closestLocation);
 		return this.find(closestLocation);
 	}
 	
 	public NodeInfo getInternalResponsibleNode(int key) {
-		int closestLocation = booleanSearch(this.findAllLocations(), key);
+		int closestLocation = binarySearch(this.findAllLocations(), key);
 		return this.find(closestLocation);
 	}
 	
@@ -143,13 +159,14 @@ public class Datastore {
 		while(itr.hasNext()) {
 			int location = itr.next();
 			if((location <= t && (t < this.self || location > this.self)) || (t < this.self && location > this.self)) {
-				this.find(location).setOnline(false);
+				NodeInfo n =  this.find(location);
+				n.setOnline(false);
 			}
 		}
 		return this.findThisNode();
 	}
 	
-	private int booleanSearch(List<Integer> sortList, int searchNum) {
+	private int binarySearch(List<Integer> sortList, int searchNum) {
 		int index = sortList.size()/2;
 		int prev = sortList.size();		
 		//System.out.println(Arrays.toString(sortList.toArray()));
@@ -167,6 +184,37 @@ public class Datastore {
 			} else if(sortList.get(index) > searchNum) {
 				if(index == 0) {
 					return sortList.get(sortList.size() - 1);
+				}
+				if(diff > index) {
+					index = 0;
+				} else {
+					index -= diff;
+				}
+			}
+		}
+	}
+	
+	/*
+	 *  Find the searchNum or closest number that is > searchNum in a sorted list
+	 */
+	private int binarySearchLarger(List<Integer> sortList, int searchNum) {
+		int index = sortList.size()/2;
+		int prev = sortList.size();		
+		//System.out.println(Arrays.toString(sortList.toArray()));
+		while(true) {
+			int diff = (int) Math.ceil(Math.abs(prev - index)/2.0);
+			//System.out.println("diff :"+diff+", prev : "+prev+", searchNum : "+searchNum+", index : "+index+", location : "+sortList.get(index));
+			prev = index;
+			if(sortList.get(index).equals(searchNum)) {
+				return sortList.get(index);
+			} else if(sortList.get(index) < searchNum ) {
+				if(index == sortList.size() - 1) {
+					return sortList.get(0);
+				}
+				index += diff;
+			} else if(sortList.get(index) > searchNum) {
+				if(index == 0 || sortList.get(index-1) < searchNum) {
+					return sortList.get(index);
 				}
 				index -= diff;
 			}
@@ -211,6 +259,28 @@ public class Datastore {
 					}
 				}
 			}
+			
+			//setup replicas
+			int closestLocation = binarySearch(this.findAllActiveLocations(), self - 1);
+			if(closestLocation != self) {
+				setReplica(this.successors.get(closestLocation));
+				//System.out.println(closestLocation);
+				closestLocation = binarySearch(this.findAllActiveLocations(), closestLocation - 1);
+				if(closestLocation != self) {
+					setReplica(this.successors.get(closestLocation));
+				}
+			}	
+
+			//setup Predecessor
+			closestLocation = binarySearchLarger(this.findAllActiveLocations(), self+1);
+			if(closestLocation != self) {
+				this.setPredecessor(this.successors.get(closestLocation));
+				closestLocation = binarySearchLarger(this.findAllActiveLocations(), closestLocation+1);
+				if(closestLocation != self) {
+					this.setPredecessor(this.successors.get(closestLocation));
+				}
+			}
+			
 		} catch (NumberFormatException e) {
 			this.addLog("NumberFormatException", Arrays.toString(e.getStackTrace()));
 		} catch (UnknownHostException e) {
@@ -218,7 +288,58 @@ public class Datastore {
 		} catch (IOException e) {
 			this.addLog("IOException", Arrays.toString(e.getStackTrace()));
 		}
-		//fillEmptyLocations();
+	}
+		
+	public void setPredecessor(NodeInfo n) {
+		n.setPredecessor(true);
+		this.predecessor.add(n);
+		this.addLog("Add Predecessor", n.getHost());
+	}
+	
+	public void replacePredecessor(NodeInfo n) {
+		n.setPredecessor(false);
+		for(int i = 0; i < this.predecessor.size(); i++) {
+			if(this.predecessor.get(i).getLocation() == n.getLocation()) {
+				this.predecessor.get(i).setReplica(false);
+				this.predecessor.remove(i);
+				break;
+			}
+		}
+		int closestLocation;
+		if(this.predecessor.size() == 0) {
+			closestLocation = binarySearchLarger(this.findAllActiveLocations(), self+1);
+			if(closestLocation != self) {
+				this.setPredecessor(this.successors.get(closestLocation));
+			}
+		}
+		if(this.predecessor.size() == 1) {
+			closestLocation = binarySearchLarger(this.findAllActiveLocations(), this.predecessor.get(0).getLocation()+1);
+			if(closestLocation != self) {
+				this.setPredecessor(this.successors.get(closestLocation));
+			}
+		} 
+	}
+	
+	public void setReplica(NodeInfo n) {
+		this.replicas.add(n);
+		this.addLog("Add Replica", n.getHost());
+	}
+	
+	public void removeReplica(NodeInfo n) {
+		for(int i = 0; i < this.replicas.size(); i++) {
+			if(this.replicas.get(i).getLocation() == n.getLocation()) {
+				this.replicas.get(i).setReplica(false);
+				this.replicas.remove(i);
+				break;
+			}
+		}
+	}
+	public List<NodeInfo> getPredecessor() {
+		return this.predecessor;
+	}
+	
+ 	public List<NodeInfo> getReplica() {
+		return this.replicas;
 	}
 	
 	public boolean isThisNode(NodeInfo n) {	
@@ -272,7 +393,7 @@ public class Datastore {
 		}
 	}	
 	
-	public Boolean getProcessCache(String uid) {
+	/*public Boolean getProcessCache(String uid) {
 		synchronized(this.processCache) {
 			return this.processCache.get(uid);		
 		}
@@ -282,7 +403,7 @@ public class Datastore {
 		synchronized(this.processCache) {
 			this.processCache.put(uid, new Boolean(val));
 		}
-	}	
+	}	*/
 	
 	@SuppressWarnings("unchecked")
 	public void addLog(String type, String log) {
@@ -318,7 +439,7 @@ public class Datastore {
 				ret.add(itr.next());
 				itr.remove();
 				count++;
-				if(count >= 65) {
+				if(count >= 50) {
 					break;
 				}
 			}

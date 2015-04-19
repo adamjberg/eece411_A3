@@ -1,8 +1,7 @@
 package com.group7.eece411.A3;
 
 import java.io.IOException;
-import java.net.SocketException;
-import java.util.Arrays;
+import java.net.UnknownHostException;
 
 
 public class Adapter implements Runnable {
@@ -12,13 +11,23 @@ public class Adapter implements Runnable {
 	NodeInfo target;
 	UDPClient client;
 
-	public Adapter(Packet packet, NodeInfo target) throws IOException {
-		this.packet = packet;
-		this.requestPacket = Protocol.forwardRequest(packet, target);
-		this.target = target;
+	public Adapter() throws UnknownHostException {
 		this.client = new UDPClient();
 		this.client.setTimeout(1500);
 	}
+	
+	public Adapter(Packet packet, NodeInfo target) throws IOException {
+		this.update(packet, target);
+		this.client = new UDPClient();
+		this.client.setTimeout(1500);
+	}
+	
+	public void update(Packet packet, NodeInfo target) throws UnknownHostException, IOException {
+		this.requestPacket = Protocol.forwardRequest(packet, target);
+		this.packet = packet;
+		this.target = target;
+	}
+	
 	public void run() {
 		boolean isReceived = false;
 		while(!isReceived) {
@@ -29,13 +38,9 @@ public class Adapter implements Runnable {
 				this.client.send(this.requestPacket);	
 				this.client.send(this.requestPacket);	
 				// Receive the response from the target node
-				Packet response = this.client.receiveResponse();
+				Packet response = this.client.receiveResponse(requestPacket.getUIDString());
 				//Datastore.getInstance().addLog("Received from Forward", response.toString());
-				while(!response.getUIDString().equals(requestPacket.getUIDString())) {
-					response = this.client.receiveResponse();
-					//Datastore.getInstance().addLog("Received from Forward", response.toString());
-					
-				}
+				
 				this.client.closeSocket();
 				isReceived = true;
 				// Copy the old unique ID
@@ -47,12 +52,11 @@ public class Adapter implements Runnable {
 				
 				// Store the uniqueID in the cache with the response 
 				Datastore.getInstance().storeCache(response.getUIDString(), response);
-				Datastore.getInstance().storeProcessCache(response.getUIDString(), false);		
+				//Datastore.getInstance().storeProcessCache(response.getUIDString(), false);		
 				
 				Datastore.getInstance().setNodeStatus(target.getLocation(), true);
 			} catch (IOException ioe) {
-				Datastore.getInstance().addLog("IOException", this.requestPacket.toString());
-				Datastore.getInstance().addException("IOException", ioe);
+				Datastore.getInstance().addLog("Received time out", target.getHost());
 				isReceived = fail();
 			}
 		}

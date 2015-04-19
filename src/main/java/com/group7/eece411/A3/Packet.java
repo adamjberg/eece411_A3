@@ -17,8 +17,13 @@ public class Packet {
 	private String sourceIP;
 	private int sourcePort;
 	private byte[] senderUID;
+	private boolean isEmpty;
 	
+	public Packet() {
+		isEmpty = true;
+	}
 	public Packet(Header h) {
+		isEmpty = false;
 		this.header = h;
 		this.payload = new byte[0];
 		this.destinationPort = 0;
@@ -32,6 +37,10 @@ public class Packet {
 		if(payload == null) {
 			this.payload = new byte[0];
 		}
+	}
+	
+	public boolean isEmpty() {
+		return this.isEmpty;
 	}
 	
 	public byte[] getPayload() {

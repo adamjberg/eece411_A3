@@ -20,6 +20,7 @@ public class KVStore {
 			response = Protocol.sendResponse(packet, target.get(packet.getStringHeader("key")), 0);
 		}
 		this.client.responseTo(response);
+		//Datastore.getInstance().addLog("Send", response.toString());
 		return response;
 	}
 	
@@ -30,8 +31,8 @@ public class KVStore {
 		} else {
 			response = Protocol.sendResponse(packet, null, 0);				
 		}
-		//Datastore.getInstance().addLog("Send", response.toString());
 		this.client.responseTo(response);
+		//Datastore.getInstance().addLog("Send", response.toString());
 		return response;
 	}
 	
@@ -44,6 +45,7 @@ public class KVStore {
 			response = Protocol.sendResponse(packet, null, 1);
 		}
 		this.client.responseTo(response);
+		//Datastore.getInstance().addLog("Send", response.toString());
 		return response;
 	}
 }

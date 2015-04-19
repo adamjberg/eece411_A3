@@ -7,7 +7,9 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -70,16 +72,31 @@ public class Protocol {
 		return clone;
 	}
 	
+	public static List<Packet> forwardCopies(Packet packet, boolean isPredecessor) throws UnknownHostException, IOException {
+		List<Packet> l = new ArrayList<Packet>();
+		int cmd = ByteOrder.ubyte2int(packet.getHeader("command")[0]);
+		int forwardCommand = ( cmd > 20 ? cmd + 10 : cmd + 30);
+		Packet clone;
+		List<NodeInfo> list = (isPredecessor) ? Datastore.getInstance().getPredecessor() : Datastore.getInstance().getReplica();
+		for(NodeInfo n : list) {
+			if(n.isOnline()) {
+				clone = packet.clone();
+				decodeUniqueId(generateUniqueID(), clone.getHeader());
+				clone.getHeader().setField("command", new byte[]{(byte)forwardCommand});
+				clone.setDestinationIP(n.getHost());
+				clone.setDestinationPort(9999);
+				l.add(clone);
+			}
+		}
+		return l;
+	}
 	/*
 	 * Create request packet from bytes we received.  We are receiving a request.
 	 */
-	public static Packet receiveRequest(byte[] packet, String host, int port) {
+	public static Packet receiveRequest(Header header, byte[] inBytes, String host, int port) {
 		Packet p = null;
-		Header header = new Header();
-		decodeUniqueId(Arrays.copyOfRange(packet, 0, 16), header);
-		byte[] inBytes = Arrays.copyOfRange(packet, 16, packet.length);
 		if (inBytes.length > MAX_REQUEST_SIZE || inBytes.length < MIN_REQUEST_SIZE)	{
-			if((int)inBytes[0] == 4 || inBytes.length == 1) {
+			if(inBytes.length >= 1 && (int)inBytes[0] == 4) {
 				header.setField("command", new byte[] {inBytes[0]});
 			} else {
 				header.setField("command", new byte[] {99});
@@ -97,7 +114,7 @@ public class Protocol {
 			} else {
 				header.setField("key", keyBytes); // the [1:32) the elements are the length
 			}
-			if(inBytes[0] == 1 || inBytes[0] == 21) { //Only if it is a put command
+			if(inBytes[0] == 1 || inBytes[0] == 21 || inBytes[0] == 31) { //Only if it is a put command
 				header.setField("value-length", Arrays.copyOfRange(inBytes, KEY_SIZE_IN_BYTES+1, MIN_REQUEST_SIZE+VALUE_LENGTH_SIZE_IN_BYTES)); // the [33:34) the elements are the length
 				int val_len_int = ByteOrder.leb2int(header.getRawHeaderValue("value-length"), 0, VALUE_LENGTH_SIZE_IN_BYTES);
 				if(inBytes[0] == 1) {
@@ -110,6 +127,8 @@ public class Protocol {
 					} else {
 						p = new Packet(header, new byte[0]);
 					}
+				} else if(inBytes[0] == 31) {
+					p = new Packet(header, Arrays.copyOfRange(inBytes, MIN_REQUEST_SIZE+VALUE_LENGTH_SIZE_IN_BYTES, MIN_REQUEST_SIZE+VALUE_LENGTH_SIZE_IN_BYTES+val_len_int));
 				} else { //code 21 internal put
 					p = new Packet(header, Arrays.copyOfRange(inBytes, MIN_REQUEST_SIZE+VALUE_LENGTH_SIZE_IN_BYTES+22, MIN_REQUEST_SIZE+VALUE_LENGTH_SIZE_IN_BYTES+val_len_int+22));
 				}
