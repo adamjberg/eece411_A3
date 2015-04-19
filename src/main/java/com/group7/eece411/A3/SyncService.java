@@ -15,7 +15,6 @@ public class SyncService extends Service {
 	}
 
 	public void run() {
-<<<<<<< HEAD
 		//NodeInfo target = Datastore.getInstance().findRandomNode(); //find half nodes
 		//Datastore.getInstance().addLog("SYNC", "PUSH "+target.getHost());
 		Packet p;
@@ -23,7 +22,7 @@ public class SyncService extends Service {
 			while(true) {
 				p = this.client.receive();
 				Datastore.getInstance().queue(p);
-=======
+		/*
 		Collection<NodeInfo> successors = Datastore.getInstance().findAll();
 		successors.remove(Datastore.getInstance().findThisNode()); // Remove yourself from successor list
 		
@@ -47,7 +46,7 @@ public class SyncService extends Service {
 				sync(buffer);
 			} catch (IOException e) {
 				Datastore.getInstance().addException("IOException", e);
->>>>>>> 442aab9a828f2dd74c4a34e92403e38ae8a22283
+		*/
 			}
 		} catch (IOException e) {
 			//Datastore.getInstance().addException("IOException", e);

@@ -288,7 +288,6 @@ public class Datastore {
 		} catch (IOException e) {
 			this.addLog("IOException", Arrays.toString(e.getStackTrace()));
 		}
-<<<<<<< HEAD
 	}
 		
 	public void setPredecessor(NodeInfo n) {
@@ -341,13 +340,6 @@ public class Datastore {
 	
  	public List<NodeInfo> getReplica() {
 		return this.replicas;
-=======
-//		for (Integer key : successors.keySet()) {
-//	        System.out.println("Successor: "+ key + " " + successors.get(key));
-//	    }
-
-		//fillEmptyLocations();
->>>>>>> 442aab9a828f2dd74c4a34e92403e38ae8a22283
 	}
 	
 	public boolean isThisNode(NodeInfo n) {	
