@@ -9,6 +9,7 @@ import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 
@@ -62,29 +63,24 @@ public class Protocol {
 		int forwardCommand = (ByteOrder.ubyte2int(packet.getHeader("command")[0]) + 20);
 		clone.getHeader().setField("command", new byte[]{(byte)forwardCommand});
 		
-		ByteBuffer buffer = ByteBuffer.allocate(22).order(java.nio.ByteOrder.LITTLE_ENDIAN)
-				.put(InetAddress.getByName(packet.getDestinationIP()).getAddress())
-				.putShort((short)packet.getDestinationPort())
-				.put(packet.getUID());
-		clone.getHeader().setField("senderInfo", buffer.array());
 		clone.setDestinationIP(target.getHost());
 		clone.setDestinationPort(target.getPort());
 		return clone;
 	}
 	
-	public static List<Packet> forwardCopies(Packet packet, boolean isPredecessor) throws UnknownHostException, IOException {
+	public static List<Packet> forwardCopies(Packet packet) throws UnknownHostException, IOException {
 		List<Packet> l = new ArrayList<Packet>();
 		int cmd = ByteOrder.ubyte2int(packet.getHeader("command")[0]);
 		int forwardCommand = ( cmd > 20 ? cmd + 10 : cmd + 30);
 		Packet clone;
-		List<NodeInfo> list = (isPredecessor) ? Datastore.getInstance().getPredecessor() : Datastore.getInstance().getReplica();
+		Collection<NodeInfo> list = Datastore.getInstance().findThisNode().getNodes();
 		for(NodeInfo n : list) {
-			if(n.isOnline()) {
+			if(n.isOnline() && !n.isSelf()) {
 				clone = packet.clone();
 				decodeUniqueId(generateUniqueID(), clone.getHeader());
 				clone.getHeader().setField("command", new byte[]{(byte)forwardCommand});
 				clone.setDestinationIP(n.getHost());
-				clone.setDestinationPort(9999);
+				clone.setDestinationPort(n.getPort());
 				l.add(clone);
 			}
 		}
@@ -127,34 +123,17 @@ public class Protocol {
 					} else {
 						p = new Packet(header, new byte[0]);
 					}
-				} else if(inBytes[0] == 31) {
+				} else {
 					p = new Packet(header, Arrays.copyOfRange(inBytes, MIN_REQUEST_SIZE+VALUE_LENGTH_SIZE_IN_BYTES, MIN_REQUEST_SIZE+VALUE_LENGTH_SIZE_IN_BYTES+val_len_int));
-				} else { //code 21 internal put
-					p = new Packet(header, Arrays.copyOfRange(inBytes, MIN_REQUEST_SIZE+VALUE_LENGTH_SIZE_IN_BYTES+22, MIN_REQUEST_SIZE+VALUE_LENGTH_SIZE_IN_BYTES+val_len_int+22));
-				}
+				} 
 			} else {
 				p = new Packet(header);
 			}			
 		}
 		
-		if(inBytes[0] > 20 && inBytes[0] < 24) {
-			InetAddress senderIP;
-			int start = MIN_REQUEST_SIZE;
-			try {
-				if(inBytes[0] == 21) {
-					start = MIN_REQUEST_SIZE+VALUE_LENGTH_SIZE_IN_BYTES;
-				}
-				senderIP = InetAddress.getByAddress(Arrays.copyOfRange(inBytes, start, start+4));
-				p.setSourceIP(senderIP.getHostAddress());
-				p.setSourcePort(ByteOrder.leb2int(Arrays.copyOfRange(inBytes, start+4, start+6), 0, 2));
-				p.setSenderUID(Arrays.copyOfRange(inBytes, start+6, start+22));
-			} catch (UnknownHostException e) {
-				Datastore.getInstance().addException("UnknownHostException", e);
-			}
-		}
-		
 		p.setDestinationIP(host);
 		p.setDestinationPort(port);
+		p.setCode(ByteOrder.ubyte2int(header.getRawHeaderValue("command")[0]));
 		return p;
 	}
 	
@@ -191,6 +170,7 @@ public class Protocol {
 		}
 		p.setDestinationIP(host);
 		p.setDestinationPort(port);
+		p.setCode(ByteOrder.ubyte2int(header.getRawHeaderValue("response")[0]));
 		return p;
 	}
 
@@ -208,7 +188,7 @@ public class Protocol {
 	public static byte[] generateUniqueID() throws UnknownHostException, IOException {
 		ByteBuffer resultBuffer = ByteBuffer.allocate(16).order(java.nio.ByteOrder.LITTLE_ENDIAN)
 				.put(InetAddress.getLocalHost().getAddress())
-				.putShort((short)Datastore.getInstance().findThisNode().getPort())
+				.putShort((short)Datastore.getInstance().findThisNode().getShortestPath().getPort())
 				.putShort((short)(new Random()).nextInt(1 << 15))
 				.putLong(System.currentTimeMillis()+counter);
 		counter++;

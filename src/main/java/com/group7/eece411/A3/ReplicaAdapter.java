@@ -7,17 +7,15 @@ public class ReplicaAdapter implements Runnable {
 
 	private Packet packet;
 	private UDPClient client;
-	private boolean isPredecessor;
 	
-	public ReplicaAdapter(Packet p, boolean isPredecessor) throws UnknownHostException {
+	public ReplicaAdapter(Packet p) throws UnknownHostException {
 		this.packet = p;
 		this.client = new UDPClient();
-		this.isPredecessor = isPredecessor;
 	}
 
 	public void run() {
 		try {
-			this.client.forwardCopies(Protocol.forwardCopies(packet, isPredecessor));
+			this.client.forwardCopies(Protocol.forwardCopies(packet));
 		} catch (IOException e) {
 			Datastore.getInstance().addException("IOException", e);
 		}

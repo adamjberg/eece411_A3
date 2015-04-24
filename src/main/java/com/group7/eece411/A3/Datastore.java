@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -13,6 +12,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
@@ -33,30 +33,23 @@ import org.json.simple.parser.ParseException;
  * */
 public class Datastore {
 	public static int CIRCLE_SIZE = 256;
-	public static final long TIMEOUT = 30;
-	public static final long PROCESS_TIMEOUT = 15;
+	public static final long TIMEOUT = 15;
 
 	private static Datastore instance = null;
-	private ConcurrentHashMap<Integer, NodeInfo> successors;
+	private ConcurrentHashMap<Integer, Replicas> successors;
+	private ConcurrentHashMap<String, NodeInfo> hosts;
 	private Integer self;
 	private ArrayList<Packet> packetQueue;
-	private ArrayList<DatagramPacket> datagramQueue;
 	private SimpleCache<Packet> cache;
-	//private SimpleCache<Boolean> processCache;
 	private ArrayList<JSONObject> logs;
 	public static boolean breakerPoint = false;
-	private ArrayList<NodeInfo> replicas;
-	private ArrayList<NodeInfo> predecessor;
 	
 	private Datastore() {
-		this.successors = new ConcurrentHashMap<Integer, NodeInfo>();
+		this.successors = new ConcurrentHashMap<Integer, Replicas>();
+		this.hosts = new ConcurrentHashMap<String, NodeInfo>();
 		this.packetQueue = new ArrayList<Packet>();
-		this.datagramQueue = new ArrayList<DatagramPacket>();
 		this.logs = new ArrayList<JSONObject>();
 		this.cache = new SimpleCache<Packet>(TIMEOUT);
-		//this.processCache = new SimpleCache<Boolean>(PROCESS_TIMEOUT);
-		this.replicas = new ArrayList<NodeInfo>();
-		this.predecessor = new ArrayList<NodeInfo>();
 		setupNodes();
 	}
 
@@ -67,21 +60,6 @@ public class Datastore {
 			instance = new Datastore();
 		}
 		return instance;
-	}
-
-	public void queue(DatagramPacket d) {
-		synchronized(this.datagramQueue) {
-			this.datagramQueue.add(d);
-		}
-	}
-	
-	public List<DatagramPacket> pollDatagram() {
-		ArrayList<DatagramPacket> clone = null;
-		synchronized(this.datagramQueue) {	
-			clone = this.datagramQueue;
-			this.datagramQueue = new ArrayList<DatagramPacket>();
-		}
-		return clone;
 	}
 	
 	public void queue(Packet p) {
@@ -100,9 +78,8 @@ public class Datastore {
 	}
 	
 	// What does this location mean ?
-	public NodeInfo find(int location) {
-		NodeInfo found = this.successors.get(location);
-		return found;
+	public Replicas find(int location) {
+		return this.successors.get(location);
 	}
  
 	/*
@@ -113,11 +90,11 @@ public class Datastore {
 	}
 	
 	public List<Integer> findAllActiveLocations() {
-		Collection<NodeInfo> list = this.successors.values();
+		Collection<Replicas> list = this.successors.values();
 		List<Integer> locs = new ArrayList<Integer>();
-		for(NodeInfo n : list) {
-			if(n.isOnline()) {
-				locs.add(n.getLocation());
+		for(Replicas r : list) {
+			if(r.isOnline()) {
+				locs.add(r.getLocation());
 			}
 		}
 		locs.sort(new IntComparable());
@@ -125,18 +102,18 @@ public class Datastore {
 	}
 	
 	
-	public NodeInfo findRandomNode() {
+	/*public NodeInfo findRandomNode() {
 		return this.getResponsibleNode((int)(Math.random()*CIRCLE_SIZE));
-	}
+	}*/
 	 
 	/*
 	 * Get the node that responsible for the key, it can be the caller node or other remote nodes
 	 */
-	public NodeInfo getResponsibleNode(byte keyByte) {
+	public Replicas getResponsibleNode(byte keyByte) {
 		return getResponsibleNode(ByteOrder.ubyte2int(keyByte));
 	}
 
-	public NodeInfo getResponsibleNode(int key) {
+	public Replicas getResponsibleNode(int key) {
 		//System.out.println("key : "+key);
 		if(this.self == key) return this.findThisNode();
 		int closestLocation = binarySearch(this.findAllActiveLocations(), key);
@@ -144,26 +121,24 @@ public class Datastore {
 		return this.find(closestLocation);
 	}
 	
-	public NodeInfo getInternalResponsibleNode(int key) {
+	public Replicas getInternalResponsibleNode(int key) {
 		int closestLocation = binarySearch(this.findAllLocations(), key);
 		return this.find(closestLocation);
 	}
 	
-	public NodeInfo forceTargetSelf(NodeInfo target) {
+	public void forceTargetSelf(Replicas target) {
 		int t = target.getLocation();
-		if(this.self.intValue() == t) {
-			return target;
-		}
-		Set<Integer> allLocations = this.successors.keySet();
-		Iterator<Integer> itr = allLocations.iterator();
-		while(itr.hasNext()) {
-			int location = itr.next();
-			if((location <= t && (t < this.self || location > this.self)) || (t < this.self && location > this.self)) {
-				NodeInfo n =  this.find(location);
-				n.setOnline(false);
+		if(this.self.intValue() != t) {
+			Set<Integer> allLocations = this.successors.keySet();
+			Iterator<Integer> itr = allLocations.iterator();
+			while(itr.hasNext()) {
+				int location = itr.next();
+				if((location <= t && (t < this.self || location > this.self)) || (t < this.self && location > this.self)) {
+					Replicas n =  this.find(location);
+					n.setStatus(false);
+				}
 			}
 		}
-		return this.findThisNode();
 	}
 	
 	private int binarySearch(List<Integer> sortList, int searchNum) {
@@ -180,7 +155,11 @@ public class Datastore {
 				if(index == sortList.size() - 1 || sortList.get(index+1) > searchNum) {
 					return sortList.get(index);
 				}
-				index += diff;
+				if(index+diff >= sortList.size()) {
+					index++;
+				} else {
+					index += diff;
+				}
 			} else if(sortList.get(index) > searchNum) {
 				if(index == 0) {
 					return sortList.get(sortList.size() - 1);
@@ -194,42 +173,18 @@ public class Datastore {
 		}
 	}
 	
-	/*
-	 *  Find the searchNum or closest number that is > searchNum in a sorted list
-	 */
-	private int binarySearchLarger(List<Integer> sortList, int searchNum) {
-		int index = sortList.size()/2;
-		int prev = sortList.size();		
-		//System.out.println(Arrays.toString(sortList.toArray()));
-		while(true) {
-			int diff = (int) Math.ceil(Math.abs(prev - index)/2.0);
-			//System.out.println("diff :"+diff+", prev : "+prev+", searchNum : "+searchNum+", index : "+index+", location : "+sortList.get(index));
-			prev = index;
-			if(sortList.get(index).equals(searchNum)) {
-				return sortList.get(index);
-			} else if(sortList.get(index) < searchNum ) {
-				if(index == sortList.size() - 1) {
-					return sortList.get(0);
-				}
-				index += diff;
-			} else if(sortList.get(index) > searchNum) {
-				if(index == 0 || sortList.get(index-1) < searchNum) {
-					return sortList.get(index);
-				}
-				index -= diff;
-			}
+	public void setNodeStatus(int id, boolean isOnline) {
+		synchronized(this.successors.get(id)) {
+			this.successors.get(id).setStatus(isOnline);
 		}
 	}
-	public void setNodeStatus(int id, boolean isOnline) {
-		this.successors.get(id).setOnline(isOnline, new Date());
-	}
 	
-	public Collection<NodeInfo> findAll() {
-		this.successors.get(this.self).setLastUpdateDate(new Date());
+	public Collection<Replicas> findAllKVStore() {
+		//this.successors.get(this.self).setLastUpdateDate(new Date());
 		return this.successors.values();
 	}
 
-	public NodeInfo findThisNode() {
+	public Replicas findThisNode() {
 		return this.successors.get(this.self);
 	}
 
@@ -238,111 +193,64 @@ public class Datastore {
 				"file/hosts.txt");
 		BufferedReader reader = new BufferedReader(new InputStreamReader(in));
 		String line = null;
+		List<Integer> locs = new ArrayList<Integer>();
+		HashMap<Integer, NodeInfo> map = new HashMap<Integer, NodeInfo>();
+		String[] lineArray;
 		try {
 			while ((line = reader.readLine()) != null) {
-				String[] lineArray = line.split(":");
+				//System.out.println(line);
+				lineArray = line.split(":");
 				if (lineArray.length != 3) {
 					this.addLog("ERROR","Invalid Line Found!");
 				} else {
 					NodeInfo n = new NodeInfo(lineArray[0],
 							Integer.valueOf(lineArray[1]),
 							Integer.valueOf(lineArray[2]));
-
-					n.setOnline(true);
-					
-					if (self == null && isNodeInfoMine(n)) {
-						this.addLog("INFO", "Start machine : "+n.getHost()+" with location "+n.getLocation());
+					if (this.self == null && isNodeInfoMine(n)) {
 						this.self = n.getLocation();
+						System.out.println("self "+this.self);
+						n.setSelf(true);
 					} 
 					if (n.getLocation() < CIRCLE_SIZE && n.getLocation() >= 0) {
-						this.successors.put(n.getLocation(), n);
+						map.put(n.getLocation(), n);
+						this.hosts.put(n.getHost(), n);
+						locs.add(n.getLocation());
 					}
 				}
 			}
-			
-			//setup replicas
-			int closestLocation = binarySearch(this.findAllActiveLocations(), self - 1);
-			if(closestLocation != self) {
-				setReplica(this.successors.get(closestLocation));
-				//System.out.println(closestLocation);
-				closestLocation = binarySearch(this.findAllActiveLocations(), closestLocation - 1);
-				if(closestLocation != self) {
-					setReplica(this.successors.get(closestLocation));
-				}
-			}	
-
-			//setup Predecessor
-			closestLocation = binarySearchLarger(this.findAllActiveLocations(), self+1);
-			if(closestLocation != self) {
-				this.setPredecessor(this.successors.get(closestLocation));
-				closestLocation = binarySearchLarger(this.findAllActiveLocations(), closestLocation+1);
-				if(closestLocation != self) {
-					this.setPredecessor(this.successors.get(closestLocation));
+			locs.sort(new IntComparable());
+			int count = 0;
+			int buf = 0;
+			//System.out.println("Locs size "+locs.size());
+			for(Integer i : locs) {
+				count++;
+				if(count > 3 || count == 1) {
+					count = 1;
+					this.successors.put(i, new Replicas(i, map.get(i)));
+					buf = i;
+				} else {
+					this.successors.get(buf).add(map.get(i));
+					if(i.intValue() == this.self) {
+						this.successors.get(buf).setShortestPath(map.get(i), 0);
+						this.self = buf;
+						System.out.println("self "+this.self);
+					}
 				}
 			}
-			
 		} catch (NumberFormatException e) {
-			this.addLog("NumberFormatException", Arrays.toString(e.getStackTrace()));
+			this.addException("NumberFormatException", e);
 		} catch (UnknownHostException e) {
-			this.addLog("UnknownHostException", Arrays.toString(e.getStackTrace()));
+			this.addException("UnknownHostException", e);
 		} catch (IOException e) {
-			this.addLog("IOException", Arrays.toString(e.getStackTrace()));
+			this.addException("IOException", e);
 		}
 	}
 		
-	public void setPredecessor(NodeInfo n) {
-		n.setPredecessor(true);
-		this.predecessor.add(n);
-		this.addLog("Add Predecessor", n.getHost());
+	public NodeInfo getHost(String hostname) {
+		return this.hosts.get(hostname);
 	}
-	
-	public void replacePredecessor(NodeInfo n) {
-		n.setPredecessor(false);
-		for(int i = 0; i < this.predecessor.size(); i++) {
-			if(this.predecessor.get(i).getLocation() == n.getLocation()) {
-				this.predecessor.get(i).setReplica(false);
-				this.predecessor.remove(i);
-				break;
-			}
-		}
-		int closestLocation;
-		if(this.predecessor.size() == 0) {
-			closestLocation = binarySearchLarger(this.findAllActiveLocations(), self+1);
-			if(closestLocation != self) {
-				this.setPredecessor(this.successors.get(closestLocation));
-			}
-		}
-		if(this.predecessor.size() == 1) {
-			closestLocation = binarySearchLarger(this.findAllActiveLocations(), this.predecessor.get(0).getLocation()+1);
-			if(closestLocation != self) {
-				this.setPredecessor(this.successors.get(closestLocation));
-			}
-		} 
-	}
-	
-	public void setReplica(NodeInfo n) {
-		this.replicas.add(n);
-		this.addLog("Add Replica", n.getHost());
-	}
-	
-	public void removeReplica(NodeInfo n) {
-		for(int i = 0; i < this.replicas.size(); i++) {
-			if(this.replicas.get(i).getLocation() == n.getLocation()) {
-				this.replicas.get(i).setReplica(false);
-				this.replicas.remove(i);
-				break;
-			}
-		}
-	}
-	public List<NodeInfo> getPredecessor() {
-		return this.predecessor;
-	}
-	
- 	public List<NodeInfo> getReplica() {
-		return this.replicas;
-	}
-	
-	public boolean isThisNode(NodeInfo n) {	
+		
+	public boolean isThisNode(Replicas n) {	
 		if(n == null) return true;
 		if(this.self != null) {
 			//if the node is offline, the server is responsible
@@ -392,8 +300,7 @@ public class Datastore {
 			this.cache.put(uid, packet);
 		}
 	}	
-	
-	/*public Boolean getProcessCache(String uid) {
+		/*public Boolean getProcessCache(String uid) {
 		synchronized(this.processCache) {
 			return this.processCache.get(uid);		
 		}
@@ -419,6 +326,7 @@ public class Datastore {
 	
 	@SuppressWarnings("unchecked")
 	public void addException(String type, Exception e) {
+		e.printStackTrace();
 		JSONObject map=new JSONObject();
 		map.put("type", type);
 		map.put("time", (new Date()).getTime());
@@ -446,7 +354,7 @@ public class Datastore {
 			return ret;
 		}
 	}
-	
+	/*
 	public void sync(String dataFeed) {
 		JSONParser parser=new JSONParser();
 		NodeInfo node = null;
@@ -461,7 +369,7 @@ public class Datastore {
 		} catch (ParseException e) {
 			this.addLog("ParseException", Arrays.toString(e.getStackTrace()));
 		}		  
-	}
+	}*/
 	
 	public class IntComparable implements Comparator<Integer>{
 		 

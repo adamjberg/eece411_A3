@@ -18,6 +18,7 @@ public class Packet {
 	private int sourcePort;
 	private byte[] senderUID;
 	private boolean isEmpty;
+	private int code;
 	
 	public Packet() {
 		isEmpty = true;
@@ -147,5 +148,17 @@ public class Packet {
 	
 	public String getUIDString() {
 		return this.header.getUIDString();
+	}
+	/**
+	 * @return the code
+	 */
+	public int getCode() {
+		return code;
+	}
+	/**
+	 * @param code the code to set
+	 */
+	public void setCode(int code) {
+		this.code = code;
 	}
 }

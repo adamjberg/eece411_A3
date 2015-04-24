@@ -22,9 +22,10 @@ public class MonitorService extends Service
 	public static final String host = "54.68.197.12";
 	public static final int port = 41170;
 	private JSONObject loc;
-	
+	private InetAddress ip;
 	public MonitorService(int period) throws IOException {
 		super(period, 41171);
+		ip = InetAddress.getByName(host);
 		try {
 			this.loc = (JSONObject)(new JSONParser()).parse(request("http://ip-api.com/json/"+InetAddress.getLocalHost().getHostAddress(), "GET"));
 		} catch (org.json.simple.parser.ParseException e) {
@@ -38,7 +39,7 @@ public class MonitorService extends Service
     {	
 		try {
 			Datastore.getInstance().findThisNode().update();
-			client.send(host, port, getData());
+			client.send(ip, port, getData());
 		} catch (IOException e) {
 			e.printStackTrace();
 			Datastore.getInstance().addException("EXCEPTION", e);
@@ -73,9 +74,9 @@ public class MonitorService extends Service
 		map.put("serviceUptime", ManagementFactory.getRuntimeMXBean().getUptime());
 		map.put("loc", this.loc);
 		map.put("logs", Datastore.getInstance().getLogs());
-		map.put("kvstore", Datastore.getInstance().findAll());	
+		map.put("kvstore", "[]");	
 		map.put("index", Datastore.getInstance().findThisNode().getLocation());
-
+		//System.out.println(map.toJSONString());
 		return map.toJSONString().getBytes();
     }
 }

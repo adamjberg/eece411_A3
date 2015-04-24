@@ -10,7 +10,6 @@ import java.util.concurrent.Executors;
 public class App {
 	private UDPClient listener; 
 	private Datastore db; 
-	private NodeInfo thisNode;
 	private HashMap<String, Service> services;
 	private ExecutorService networkService;
 
@@ -29,34 +28,36 @@ public class App {
 	//bootstrap
 	public App() throws IOException {
 		this.db = Datastore.getInstance();
-		thisNode = this.db.findThisNode();
-		this.listener = new UDPClient(thisNode.getPort());
+		this.listener = new UDPClient(this.db.findThisNode().getShortestPath().getPort());
 		this.listener.setTimeout(0);
 		this.listener.createSocket();
 		this.services = new HashMap<String, Service>();
 		this.services.put("monitor", (new MonitorService(15000))); //every 15 seconds
-		this.services.put("sync", (new SyncService(100))); //every 10 sec
-		this.services.put("kvStore", (new RouteService(50, this))); //every 0.1 sec
-		this.networkService = Executors.newFixedThreadPool(1);
+		this.services.put("kvStore", (new RouteService(50, this, this.listener))); //every 0.1 sec
+		this.networkService = Executors.newFixedThreadPool(5);
 	}
 
+	public UDPClient getClient() {
+		return this.listener;
+	}
+	
 	public void run() {
 		this.start();
 		
 		Packet p = null;
 		int cmdCode;
-		NodeInfo target = null;
+		Replicas target = null;
 		do {
 			try{
 				p = this.listener.receive(); 
 				
 				if(p != null) {
 					//Datastore.getInstance().addLog("RECEIVE", p.toString());
-					cmdCode = ByteOrder.ubyte2int(p.getHeader("command")[0]);
+					cmdCode = p.getCode();
 					if(p.getHeader("key") != null && ((cmdCode > 0 && cmdCode < 4) || (cmdCode > 20 && cmdCode < 24))) {
 						target = Datastore.getInstance().getResponsibleNode(p.getHeader("key")[0]);	
 						if((cmdCode > 0 && cmdCode < 4) && !Datastore.getInstance().isThisNode(target)) {
-							networkService.execute(new Adapter(p, target));
+							networkService.execute(new Adapter(p, target, this.listener));
 						} else {
 							if(cmdCode > 20 && cmdCode < 24) {
 								Datastore.getInstance().forceTargetSelf(target);
@@ -88,6 +89,11 @@ public class App {
 			serviceIterator.remove();
 		}
 		networkService.shutdown();
+		/*try {
+			this.listener.responseTo(response);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}*/
 		System.exit(0);
 	}
 }

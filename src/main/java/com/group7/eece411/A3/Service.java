@@ -3,7 +3,6 @@ package com.group7.eece411.A3;
 import java.net.UnknownHostException;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.TimeUnit;
 
 public class Service extends TimerTask{
 
@@ -17,6 +16,11 @@ public class Service extends TimerTask{
 	
 	public Service(int period, int port) throws UnknownHostException {
 		this.client = new UDPClient(port);
+		this.period = period;
+	}
+	
+	public Service(int period, UDPClient client) throws UnknownHostException {
+		this.client = client;
 		this.period = period;
 	}
 	

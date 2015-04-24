@@ -8,6 +8,9 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
+import org.christianschenk.simplecache.SimpleCache;
 
 /**
  * @author Danny Chih Yang Hsieh
@@ -18,11 +21,13 @@ public class UDPClient {
 	private int listenPort;
 	private int timeout;
 	private DatagramSocket socket;
+	private ConcurrentLinkedQueue<Packet> sendQueue;
 	
 	public UDPClient(int port)
 			throws UnknownHostException {
 		this();
 		this.listenPort = port; 
+		this.sendQueue = new ConcurrentLinkedQueue<Packet>();
 	}
 	
 	public UDPClient() throws UnknownHostException {
@@ -31,6 +36,10 @@ public class UDPClient {
 		this.setTimeout(100);
 	}
 
+	public void addPacketToSend(Packet p) {
+		this.sendQueue.add(p);
+	}
+	
 	public void setTimeout(int millseconds) {
 		this.timeout = millseconds;
 		if (millseconds < 0)
@@ -80,8 +89,8 @@ public class UDPClient {
 	public void responseCache(String ip, int port, Packet cachePacket) throws IOException {
 		cachePacket.setDestinationIP(ip);
 		cachePacket.setDestinationPort(port);
-		this.send(cachePacket);
-		Datastore.getInstance().addLog("RESPOND Cache", cachePacket.toString());
+		this.addPacketToSend(cachePacket);
+		//Datastore.getInstance().addLog("RESPOND Cache", cachePacket.toString());
 	}
 	
 	public void responseTo(Packet sendPacket) throws IOException {
@@ -89,6 +98,12 @@ public class UDPClient {
 		Datastore.getInstance().storeCache(sendPacket.getUIDString(), sendPacket);
 		//Datastore.getInstance().storeProcessCache(sendPacket.getUIDString(), false);		
 		//Datastore.getInstance().addLog("RESPOND", sendPacket.toString());
+	}
+	
+	public void sendQueue() throws IOException {
+		while(!this.sendQueue.isEmpty()) {
+			this.responseTo(this.sendQueue.poll());
+		}
 	}
 	
 	public void send(Packet p) throws IOException {
@@ -104,18 +119,25 @@ public class UDPClient {
 		}
 		this.createSocket();
 		byte[] request = p.getBytes();
+		NodeInfo n = Datastore.getInstance().getHost(host);
+		InetAddress ip;
+		if(n == null) {
+			ip = InetAddress.getByName(host);
+		} else {
+			ip = n.getAddress();
+		}
 		DatagramPacket packet = new DatagramPacket(request, request.length,
-				InetAddress.getByName(host), port);
+				ip, port);
 		socket.send(packet);
 	}
 	
-	public void send(String host, int port, byte[] data) throws IOException {
-		if (host == null || data == null) { 
+	public void send(InetAddress ip, int port, byte[] data) throws IOException {
+		if (ip == null || data == null) { 
 			throw new IllegalArgumentException();
 		}
 		this.createSocket();
 		DatagramPacket packet = new DatagramPacket(data, data.length,
-				InetAddress.getByName(host), port);
+				ip, port);
 		socket.send(packet);
 	}
 	
