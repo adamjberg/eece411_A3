@@ -94,10 +94,12 @@ public class UDPClient {
 	}
 	
 	public void responseTo(Packet sendPacket) throws IOException {
-		this.send(sendPacket);
+		this.responseTo(sendPacket, 1);
+	}
+	
+	public void responseTo(Packet sendPacket, int times) throws IOException {
+		this.send(sendPacket, times);
 		Datastore.getInstance().storeCache(sendPacket.getUIDString(), sendPacket);
-		//Datastore.getInstance().storeProcessCache(sendPacket.getUIDString(), false);		
-		//Datastore.getInstance().addLog("RESPOND", sendPacket.toString());
 	}
 	
 	public void sendQueue() throws IOException {
@@ -110,10 +112,10 @@ public class UDPClient {
 		if (p == null) {
 			throw new IllegalArgumentException();
 		}
-		this.send(p.getDestinationIP(), p.getDestinationPort(), p);
+		this.send(p.getDestinationIP(), p.getDestinationPort(), p, 1);
 	}
 	
-	public void send(String host, int port, Packet p) throws IOException {
+	public void send(String host, int port, Packet p, int times) throws IOException {
 		if (host == null || p == null) {
 			throw new IllegalArgumentException();
 		}
@@ -128,7 +130,16 @@ public class UDPClient {
 		}
 		DatagramPacket packet = new DatagramPacket(request, request.length,
 				ip, port);
-		socket.send(packet);
+		for(int i = 0; i < times; i++) {
+			socket.send(packet);
+		}
+	}
+	
+	public void send(Packet p, int times) throws IOException {
+		if (p == null) {
+			throw new IllegalArgumentException();
+		}
+		this.send(p.getDestinationIP(), p.getDestinationPort(), p, times);
 	}
 	
 	public void send(InetAddress ip, int port, byte[] data) throws IOException {
@@ -182,7 +193,7 @@ public class UDPClient {
 
 	public void forwardCopies(List<Packet> packets) throws IOException {
 		for(Packet p : packets) {
-			this.send(p);
+			this.send(p, 1);
 		}
 	}
 }

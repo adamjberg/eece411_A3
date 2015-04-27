@@ -35,8 +35,8 @@ public class Protocol {
 	public static Packet sendResponse(Packet req, byte[] value, int responseCode) {
 		Header h = new Header();
 		decodeUniqueId(req.getUID(), h);
-		int response = 0;
-		h.setField("response", new byte[]{(byte)( response + responseCode)});
+		//int response = 0;
+		h.setField("response", new byte[]{(byte)(responseCode)});
 		if(responseCode == 0 && value != null && value.length > 0 && value.length <= MAX_VALUE_LENGTH) {
 			h.setField("value-length", ByteOrder.int2leb(value.length));
 		}

@@ -10,14 +10,12 @@ import java.util.concurrent.Executors;
 public class RouteService extends Service {
 
 	private App program;
-	private KVStore kvStore;
 	private ExecutorService networkService;
 	private UDPClient replier;
 	
 	public RouteService(int period, App app, UDPClient client) throws UnknownHostException {
 		super(period, 0);
 		this.program = app;
-		this.kvStore = new KVStore(client);
 		this.networkService = Executors.newFixedThreadPool(2);
 		this.replier = client;
 	}
@@ -41,25 +39,22 @@ public class RouteService extends Service {
     }
 	
 	private void process(Packet p) throws IOException {
-		Replicas target = null;
+		Replicas target = Datastore.getInstance().findThisNode();
 		Packet packetToSender = null;
-		if(p.getHeader("key") != null) {
-			target = Datastore.getInstance().getInternalResponsibleNode(p.getHeader("key")[0]);
-		}
 		switch (p.getCode()) {
 			case 1: 
-				packetToSender = kvStore.putIn(p, target);
+				packetToSender = KVStore.putIn(p, target);
 				this.replier.responseTo(packetToSender);
 				if(packetToSender.getHeader("response")[0] == 0) {
 					networkService.execute(new ReplicaAdapter(p));
 				}
 				break;
 			case 2: 
-				packetToSender = kvStore.getFrom(p, target);
+				packetToSender = KVStore.getFrom(p, target);
 				this.replier.responseTo(packetToSender);
 				break;
 			case 3: 
-				packetToSender = kvStore.removeFrom(p, target);
+				packetToSender = KVStore.removeFrom(p, target);
 				this.replier.responseTo(packetToSender);
 				if(packetToSender.getHeader("response")[0] == 0) {
 					networkService.execute(new ReplicaAdapter(p));
@@ -70,31 +65,24 @@ public class RouteService extends Service {
 				this.program.terminate();
 				break;
 			case 21: 		
-				packetToSender = kvStore.putIn(p, target);
-				this.client.responseTo(packetToSender); //send ack again
+				packetToSender = KVStore.putIn(p, target);
+				this.client.responseTo(packetToSender, 2); //send ack 
 				if(packetToSender.getHeader("response")[0] == 0) {
 					networkService.execute(new ReplicaAdapter(p));
 				}
-				this.client.responseTo(packetToSender); //send ack again
 				//packetToSender = Protocol.respondToSender(p, packetToSender);
 				//this.client.responseTo(packetToSender); //send to the original requester
 				break;
 			case 22: 
-				packetToSender = kvStore.getFrom(p, target);
-				this.client.responseTo(packetToSender); //send ack again
-				this.client.responseTo(packetToSender); //send ack again
-				//packetToSender = Protocol.respondToSender(p, packetToSender);
-				//this.client.responseTo(packetToSender);
+				packetToSender = KVStore.getFrom(p, target);
+				this.client.responseTo(packetToSender, 2); //send ack 
 				break;
 			case 23: 
-				packetToSender = kvStore.removeFrom(p, target);
-				this.client.responseTo(packetToSender); //send ack again
+				packetToSender = KVStore.removeFrom(p, target);
+				this.client.responseTo(packetToSender, 2); //send ack 
 				if(packetToSender.getHeader("response")[0] == 0) {
 					networkService.execute(new ReplicaAdapter(p));
 				}
-				this.client.responseTo(packetToSender); //send ack again
-				//packetToSender = Protocol.respondToSender(p, packetToSender);
-				//this.client.responseTo(packetToSender);
 				break;
 			case 24:
 				this.stop();
@@ -104,10 +92,8 @@ public class RouteService extends Service {
 				//Datastore.getInstance().addLog("REPLICA PUT", target.toString());
 				break;
 			case 33:
-				if(target.get(p.getStringHeader("key")) != null) {
-					target.remove(p.getStringHeader("key"));
-					//Datastore.getInstance().addLog("REPLICA REMOVE", target.toString());
-				}
+				target.remove(p.getStringHeader("key"));
+				//Datastore.getInstance().addLog("REPLICA REMOVE", target.toString());
 				break;
 			default:
 				this.replier.responseTo(Protocol.sendResponse(p, null, 5));

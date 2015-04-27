@@ -37,10 +37,8 @@ public class Adapter implements Runnable {
 			//Datastore.getInstance().addLog("Forward", this.requestPacket.toString());
 			
 			try {
-				this.client.send(this.requestPacket);		
-				this.client.send(this.requestPacket);	
+				this.client.send(this.requestPacket, 3);	
 				time = System.currentTimeMillis();
-				this.client.send(this.requestPacket);	
 				// Receive the response from the target node
 				Packet response = this.client.receiveResponse(requestPacket.getUIDString());
 				//Datastore.getInstance().addLog("Received from Forward", response.toString());

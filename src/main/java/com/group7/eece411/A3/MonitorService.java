@@ -38,7 +38,7 @@ public class MonitorService extends Service
     public void run()
     {	
 		try {
-			Datastore.getInstance().findThisNode().update();
+			//Datastore.getInstance().findThisNode().update();
 			client.send(ip, port, getData());
 		} catch (IOException e) {
 			e.printStackTrace();

@@ -34,7 +34,7 @@ public class App {
 		this.services = new HashMap<String, Service>();
 		this.services.put("monitor", (new MonitorService(15000))); //every 15 seconds
 		this.services.put("kvStore", (new RouteService(50, this, this.listener))); //every 0.1 sec
-		this.networkService = Executors.newFixedThreadPool(5);
+		this.networkService = Executors.newFixedThreadPool(10);
 	}
 
 	public UDPClient getClient() {

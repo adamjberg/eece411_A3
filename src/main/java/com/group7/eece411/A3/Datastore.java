@@ -273,7 +273,7 @@ public class Datastore {
 		try {
 			socket = new DatagramSocket(port);
 		} catch (IOException e) {
-			System.out.println(e.getMessage());
+			e.printStackTrace();
 			portFree = false;
 		} finally {
 			if (socket != null) {

@@ -4,7 +4,6 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -49,14 +48,17 @@ public class Replicas {
 		}
 		spaceAvailable -= value.length;
 		this.kvStore.put(key, StringUtils.byteArrayToHexString(value));
-		update();
 		return true;
 	}
 	
-	public void remove(String key) {
-		byte[] bytesRemoved = this.kvStore.remove(key).getBytes(Charset.forName("UTF-8"));
+	public boolean remove(String key) {
+		String val = this.kvStore.remove(key);
+		if(val == null) {
+			return false;
+		} 
+		byte[] bytesRemoved = val.getBytes(Charset.forName("UTF-8"));
 		spaceAvailable += bytesRemoved.length;
-		update();
+		return true;
 	}
 	
 	/**

@@ -3,19 +3,14 @@ package com.group7.eece411.A3;
 import java.io.IOException;
 
 public class KVStore {
-	private UDPClient client;
-	
-	public KVStore(UDPClient client) {
-		this.client = client;
-	}
 
-	public Packet getFrom(Packet packet, Replicas target) throws IOException {
+	public static Packet getFrom(Packet packet, Replicas target) throws IOException {
 		byte[] value = target.get(packet.getStringHeader("key"));		
 		//Packet response = null;
 		if(value == null) {
 			return Protocol.sendResponse(packet, null, 1);
 		} else {
-			return Protocol.sendResponse(packet, target.get(packet.getStringHeader("key")), 0);
+			return Protocol.sendResponse(packet, value, 0);
 		}
 		//this.client.responseTo(response);
 		//this.client.responseTo(response);
@@ -23,7 +18,7 @@ public class KVStore {
 		//return response;
 	}
 	
-	public Packet putIn(Packet packet, Replicas target) throws IOException {
+	public static Packet putIn(Packet packet, Replicas target) throws IOException {
 		//Packet response = null;
 		if(!target.put(packet.getStringHeader("key"), packet.getPayload())) {
 			return Protocol.sendResponse(packet, null, 2);
@@ -37,10 +32,9 @@ public class KVStore {
 		//return response;
 	}
 	
-	public Packet removeFrom(Packet packet, Replicas target) throws IOException {
+	public static Packet removeFrom(Packet packet, Replicas target) throws IOException {
 		//Packet response = null;
-		if(target.get(packet.getStringHeader("key")) != null) {
-			target.remove(packet.getStringHeader("key"));
+		if(target.remove(packet.getStringHeader("key")) == true) {
 			return Protocol.sendResponse(packet, null, 0);
 		} else {
 			return Protocol.sendResponse(packet, null, 1);
